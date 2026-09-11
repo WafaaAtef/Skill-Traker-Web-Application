@@ -20,15 +20,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
+     country :{
+    type: String
+},
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
     },
     skill:{
-      type: String,
-      enum:["Technical" ,"Reading", "English"]
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Skill"
     },
     track:{
       type:mongoose.Schema.Types.ObjectId,
@@ -46,3 +48,14 @@ const userSchema = new mongoose.Schema(
 );
 
 export const User = mongoose.model("User", userSchema);
+
+const SkillSchema = new mongoose.Schema({
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    }
+  })
+
+export const Skill = mongoose.model("Skill",SkillSchema)

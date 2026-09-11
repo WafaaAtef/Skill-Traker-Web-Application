@@ -3,8 +3,9 @@ import mongoose from "mongoose";
 const trackSchema = new mongoose.Schema(
   {
 skill:{
-      type: String,
-      default:"Technical"
+      type: mongoose.Schema.Types.ObjectId,
+      ref : "Skill",
+      default:"6aa427a375a7cd3bfe1f4c27"
     },    
     name: {
       type: String,

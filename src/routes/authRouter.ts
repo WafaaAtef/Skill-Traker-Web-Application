@@ -4,7 +4,7 @@ import express from "express"
 
 const authRouter = Router()
 
-authRouter.post("/Sign In" ,SignIn)
-authRouter.post("/Sign Up" ,SignUp)
+authRouter.post("/SignIn" ,SignIn)
+authRouter.post("/SignUp" ,SignUp)
 
 export default authRouter

@@ -9,8 +9,7 @@
     // See also https://aka.ms/tsconfig/module
     "module": "CommonJS",
     "target": "ES2022",
-    "types": ["node"],
-    // For nodejs:
+"types": ["node", "express"],    // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
     // and npm install -D @types/node
@@ -44,5 +43,8 @@
 //    "moduleResolution": "Node",
   },
    "include": ["src/**/*.ts", "src/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+   "ts-node": {
+    "files": true
+  }
 }

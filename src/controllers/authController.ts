@@ -20,7 +20,8 @@ export const SignUp = async(req:Request ,res:Response) =>{
     User.create({
         userName , 
         email,
-        password :hashedPass
+        password :hashedPass,
+        country
     })
     res.status(200).json({
         msg:"user created"
