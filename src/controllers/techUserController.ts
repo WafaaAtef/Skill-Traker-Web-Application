@@ -6,7 +6,6 @@ const ChooseTrack =async (req:Request,res:Response) =>{
  try{
     if(!req.user){
             return res.status(401).json({msg:"unAuthorized"})
-
     }
     const verfiedUser = await User.findById(req.user.id)
     const track =await Track.findById(req.params.id)
@@ -25,4 +24,3 @@ const ChooseTrack =async (req:Request,res:Response) =>{
 catch(error){
    return res.status(500).json({msg:"server error"})}
 }
-

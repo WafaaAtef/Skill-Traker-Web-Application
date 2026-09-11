@@ -37,6 +37,7 @@ const resourceSchema = new mongoose.Schema(
   }
 );
 
+
 const topicSchema = new mongoose.Schema(
   {
     title: {
@@ -72,7 +73,6 @@ const topicSchema = new mongoose.Schema(
   }
 );
 
-
 const levelSchema = new mongoose.Schema(
   {
     title: {
@@ -102,7 +102,6 @@ const levelSchema = new mongoose.Schema(
     _id: true,
   }
 );
-
 
 const roadmapSchema = new mongoose.Schema(
   {

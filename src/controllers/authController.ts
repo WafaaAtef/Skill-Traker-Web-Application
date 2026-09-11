@@ -7,7 +7,7 @@ const maxAge = 60 *60 ;
 const createToken =(id:string , role :string) :String =>{
     return jwt.sign({id , role} , process.env.JWT_TOKEN as string, {expiresIn:maxAge})
 }
-const SignUp = async(req:Request ,res:Response) =>{
+export const SignUp = async(req:Request ,res:Response) =>{
      try {
     const{userName , email ,password , country} =req.body ;
     if(!userName || !email  || !password )
@@ -32,7 +32,7 @@ const SignUp = async(req:Request ,res:Response) =>{
 
  }
 /////////////////////////////////////////////////////////
- const SignIn = async(req:Request ,res:Response) =>{
+ export const SignIn = async(req:Request ,res:Response) =>{
    try {
       const{email ,password} =req.body ;
       if(!email || !password )
