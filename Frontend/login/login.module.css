@@ -1,0 +1,175 @@
+.page {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background: #EEE5D6;
+}
+
+
+.leftPanel {
+    order: 2;
+    flex: 1 1 50%;
+    background-color: #EEE5D6;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; 
+    overflow: hidden;
+    padding: 16px 0px 16px 16px; 
+}
+
+.leftImage {
+    transform: scale(1.4);
+}
+
+.rightPanel {
+    order: 1;
+    flex: 1 1 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.formWrapper {
+    width: 100%;
+    max-width: 325px;
+}
+
+.title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 600;
+    color: #37474f;
+    margin: 0 0 32px 0;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #37474f;
+}
+
+.input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid #585151;
+    border-radius: 15px;
+    font-size: 14px;
+    color: #232a2d;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.input:focus {
+    border-color: #37474f;
+}
+
+.passwordWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.passwordWrapper .input {
+    padding-right: 40px;
+}
+
+.eyeButton {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.loginButton {
+    width: 100%;
+    padding: 14px;
+    margin-top: 4px;
+    background-color: #37474f;
+    color: #ffffff;
+    border: none;
+    border-radius: 15px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.loginButton:hover {
+    background-color: #2c383e;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+}
+
+.dividerLine {
+    flex: 1;
+    height: 1px;
+    background-color: #e0e5e8;
+}
+
+.dividerText {
+    font-size: 13px;
+    color: #37474f;
+    white-space: nowrap;
+}
+
+.socialRow {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.socialButton {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid #e0e5e8;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease;
+}
+
+.socialButton:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.forgotLink {
+    display: block;
+    text-align: center;
+    font-size: 13px;
+    color: #4a7ba6;
+    text-decoration: none;
+}
+
+.forgotLink:hover {
+    text-decoration: underline;
+}

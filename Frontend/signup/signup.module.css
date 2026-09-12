@@ -1,0 +1,180 @@
+.page {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background: #EAE3D6;
+}
+
+.leftPanel {
+    flex: 1 1 50%;
+    background-color: #EFECE4;
+    position: relative;
+    overflow: hidden;
+}
+
+.leftImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rightPanel {
+    flex: 1 1 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.formWrapper {
+    width: 100%;
+    max-width: 380px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 600;
+    color: #37474f;
+    margin: 0 0 8px 0;
+}
+
+.loginPrompt {
+    font-size: 14px;
+    color: #78909c;
+    margin: 0;
+}
+
+.login {
+    color: #4a7ba6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login:hover {
+    text-decoration: underline;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.row {
+    display: flex;
+    gap: 12px;
+}
+
+.row .field {
+    flex: 1;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #37474f;
+}
+
+.input,
+.select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid #d7dde1;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #37474f;
+    outline: none;
+    transition: border-color 0.15s ease;
+    font-family: inherit;
+    background-color: #ffffff;
+}
+
+.input::placeholder {
+    color: #b0bec5;
+}
+
+.input:focus,
+.select:focus {
+    border-color: #37474f;
+}
+
+.select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2337474f' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.select:invalid {
+    color: #b0bec5;
+}
+
+.passwordWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.passwordWrapper .input {
+    padding-right: 40px;
+}
+
+.eyeButton {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #78909c;
+}
+
+.error {
+    font-size: 12px;
+    color: #d64545;
+}
+
+.signupButton {
+    width: 100%;
+    padding: 14px;
+    margin-top: 4px;
+    background-color: #37474f;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    font-family: inherit;
+}
+
+.signupButton:hover:not(:disabled) {
+    background-color: #2c383e;
+}
+
+.signupButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
