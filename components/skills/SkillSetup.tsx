@@ -62,8 +62,9 @@ export default function SkillSetup() {
   const handleGetRoadmap = () => {
     if (!isFormValid) return;
 
-    router.push(`/roadmap?trackId=${selectedTrackId}`);
-  };
+router.push(
+  `/roadmap?trackId=${selectedTrackId}&months=${months}&weeks=${weeks}`
+);  };
 
   return (
     <main className="min-h-screen bg-[#B85F35] px-5 py-8 md:px-10">
