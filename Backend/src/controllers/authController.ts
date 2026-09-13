@@ -4,14 +4,14 @@ import jwt from "jsonwebtoken"
 import {User} from "../models/userModel"
 
 const maxAge = 60 *60 ;
-//const JWT_SECRET = process.env.JWT_TOKEN || "skill-tracker-dev-secret-key-change-me";
+const JWT_SECRET = process.env.JWT_TOKEN || "skill-tracker-dev-secret-key-change-me";
 const createToken =(id:string , role :string) :string =>{
-    return jwt.sign({id , role} , process.env.JWT_TOKEN as string , {expiresIn:maxAge})
+    return jwt.sign({id , role} , JWT_SECRET, {expiresIn:maxAge})
 }
 export const SignUp = async(req:Request ,res:Response) =>{
      try {
-    const{userName , email ,password , country} =req.body ;
-    if(!userName || !email  || !password )
+    const{firstName, lastName , email ,password , country} =req.body ;
+    if(!firstName || !lastName || !email  || !password )
         return res.status(400).json({msg :"all fields are requred !"})
     const isExist = await User.findOne({email})
     if(isExist){
@@ -19,7 +19,8 @@ export const SignUp = async(req:Request ,res:Response) =>{
     }
     const hashedPass = await bcrypt.hash(password,10)
     await User.create({
-        userName , 
+        firstName,
+        lastName, 
         email,
         password :hashedPass,
         country
@@ -29,7 +30,8 @@ export const SignUp = async(req:Request ,res:Response) =>{
     })
      }
     catch(error){
- return res.status(500).json({msg :"internal server error"})
+      console.log(error);
+      return res.status(500).json({msg :"internal server error"})
     }
 
  }

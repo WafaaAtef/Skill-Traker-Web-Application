@@ -1,7 +1,7 @@
 import {Router} from "express"
 import {addTrack,AddRoadMap,addSkills} from "../controllers/TechSetupController"
 import {AddTrackOrRoadmap} from "../middleware/techSetupMiddleware"
-import {auth} from "../middleware/authMiddleware"
+import {auth} from "../middleware/authMidddleware"
 const TechRouter =Router()
 
 
