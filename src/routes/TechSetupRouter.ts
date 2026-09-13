@@ -6,7 +6,7 @@ import express from "express"
 const TechRouter =Router()
 
 
-TechRouter.post("/addTrack" , auth ,AddTrackOrRoadmap, addTrack)
+TechRouter.post("/addTrack"  ,AddTrackOrRoadmap, addTrack)
 TechRouter.post("/addRoadmap" , auth , AddTrackOrRoadmap, AddRoadMap)
 TechRouter.post("/addSkills" , auth , AddTrackOrRoadmap, addSkills)
 

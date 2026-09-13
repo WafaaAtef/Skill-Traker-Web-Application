@@ -61,4 +61,9 @@ export const SignUp = async(req:Request ,res:Response) =>{
   catch(error){
        return res.status(500)
           .json({msg :"internal server error"})}}
-          
+
+///////////////////////////////
+
+ export const SignOut = (req:Request ,res:Response) =>{
+
+ }

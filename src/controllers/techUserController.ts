@@ -1,7 +1,37 @@
 import {Request,Response } from "express"
 import {Track} from "../models/TrackModel"
 import {User} from "../models/userModel"
+import {Roadmap} from "../models/roadMapModel"
 import { UserProgress } from "../models/userProgressModel"
+
+export const GetTracks =async (req:Request,res:Response) =>{
+try{
+    if(!req.user){
+            return res.status(401).json({msg:"user not found"})
+    }
+    const tracks = await Track.find()
+    return res.status(201).json({tracks})
+    }
+catch(error)
+{
+     return res.status(500).json({msg:"server error"})}
+}
+//////////////////////////////
+
+export const GetRoadmaps =async (req:Request,res:Response) =>{
+try{
+    if(!req.user){
+            return res.status(401).json({msg:"user not found"})
+    }
+    const existRoadmaps = await Roadmap.find({track :req.params})
+    return res.status(200).json({existRoadmaps})
+    }
+catch(error)
+{
+     return res.status(500).json({msg:"server error"})}
+}
+
+//////////////////////////////
 export const ChooseTrack =async (req:Request,res:Response) =>{
  try{
     if(!req.user){

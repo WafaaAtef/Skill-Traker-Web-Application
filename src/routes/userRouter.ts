@@ -1,14 +1,14 @@
 import {Router} from "express"
 import{chooseSkill} from "../controllers/skillController"
-import{ChooseTrack} from "../controllers/techUserController"
-
+import{ChooseTrack,GetTracks ,GetRoadmaps} from "../controllers/techUserController"
 import {auth} from "../middleware/authMidddleware"
-
 import express from "express"
-const userRouter =Router()
 
+const userRouters =Router()
 
-userRouter.get("/chooseSkill/:id" , auth ,chooseSkill)
-userRouter.get("/ChooseTrack/:id" , auth ,ChooseTrack)
+userRouters.get("/chooseSkill/:id" , auth ,chooseSkill)
+userRouters.get("/ChooseTrack/:id" , auth ,ChooseTrack)
+userRouters.get("/GetTracks" , auth ,GetTracks)
+userRouters.get("/GetRoadmaps/:id" ,auth,GetRoadmaps)
 
-export default userRouter
+export default userRouters
