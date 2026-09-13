@@ -4,8 +4,9 @@ import jwt from "jsonwebtoken"
 import {User} from "../models/userModel"
 
 const maxAge = 60 *60 ;
+const JWT_SECRET = process.env.JWT_TOKEN || "skill-tracker-dev-secret-key-change-me";
 const createToken =(id:string , role :string) :String =>{
-    return jwt.sign({id , role} , process.env.JWT_TOKEN as string, {expiresIn:maxAge})
+    return jwt.sign({id , role} , JWT_SECRET, {expiresIn:maxAge})
 }
 export const SignUp = async(req:Request ,res:Response) =>{
      try {
@@ -52,7 +53,7 @@ export const SignUp = async(req:Request ,res:Response) =>{
       const token =createToken(user.id ,user.role)
 
       res.cookie("token",token,
-        {maxAge:maxAge* 1000 ,httpOnly:true})
+        {maxAge:maxAge* 1000 ,httpOnly:true, sameSite:"lax"})
 
       res.status(200)
           .json({msg:"Logged in" })
@@ -60,5 +61,4 @@ export const SignUp = async(req:Request ,res:Response) =>{
   catch(error){
        return res.status(500)
           .json({msg :"internal server error"})}}
-    
-    
+          

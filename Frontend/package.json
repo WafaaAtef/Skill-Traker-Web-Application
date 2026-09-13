@@ -1,0 +1,11 @@
+{
+  "name": "skill-tracker-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd roadmap && npm run dev",
+    "build": "cd roadmap && npm run build",
+    "start": "cd roadmap && npm run start",
+    "install-roadmap": "cd roadmap && npm install"
+  }
+}
