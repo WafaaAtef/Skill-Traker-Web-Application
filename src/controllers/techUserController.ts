@@ -10,10 +10,11 @@ try{
             return res.status(401).json({msg:"user not found"})
     }
     const tracks = await Track.find()
-    return res.status(201).json({tracks})
+    return res.status(200).json({tracks})
     }
 catch(error)
 {
+     console.error(error)
      return res.status(500).json({msg:"server error"})}
 }
 //////////////////////////////
@@ -23,11 +24,16 @@ try{
     if(!req.user){
             return res.status(401).json({msg:"user not found"})
     }
-    const existRoadmaps = await Roadmap.find({track :req.params})
+    const trackId = await Track.findById(req.params.id)
+    if(!trackId)
+  return res.status(400).json({msg:"Invalid track"})
+
+    const existRoadmaps = await Roadmap.find({track :trackId._id})
     return res.status(200).json({existRoadmaps})
     }
 catch(error)
 {
+        console.error(error)
      return res.status(500).json({msg:"server error"})}
 }
 
@@ -56,3 +62,4 @@ catch(error){
    return res.status(500).json({msg:"server error"})}
 }
 
+////////////////////////////

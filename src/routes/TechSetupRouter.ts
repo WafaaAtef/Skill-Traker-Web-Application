@@ -7,7 +7,7 @@ const TechRouter =Router()
 
 
 TechRouter.post("/addTrack"  ,AddTrackOrRoadmap, addTrack)
-TechRouter.post("/addRoadmap" , auth , AddTrackOrRoadmap, AddRoadMap)
+TechRouter.post("/addRoadmap" , AddRoadMap)
 TechRouter.post("/addSkills" , auth , AddTrackOrRoadmap, addSkills)
 
 export default TechRouter

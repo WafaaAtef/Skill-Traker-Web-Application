@@ -5,7 +5,7 @@ import {User} from "../models/userModel"
 
 const maxAge = 60 *60 ;
 const JWT_SECRET = process.env.JWT_TOKEN || "skill-tracker-dev-secret-key-change-me";
-const createToken =(id:string , role :string) :String =>{
+const createToken =(id:string , role :string) :string =>{
     return jwt.sign({id , role} , JWT_SECRET, {expiresIn:maxAge})
 }
 export const SignUp = async(req:Request ,res:Response) =>{
@@ -65,5 +65,14 @@ export const SignUp = async(req:Request ,res:Response) =>{
 ///////////////////////////////
 
  export const SignOut = (req:Request ,res:Response) =>{
+try{
+    if(!req.user){
+            return res.status(401).json({msg:"user not found"})
+    }
+    res.clearCookie("token")
+    res.status(200).json({msg:"Logged Out successfully"})
+  }
+    catch(error){
+       return res.status(500)
+          .json({msg :"internal server error"})}}
 
- }

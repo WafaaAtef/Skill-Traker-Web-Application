@@ -10,7 +10,7 @@ try{
          if(!verfiedUser)
             return res.status(401).json({msg:"unAutorized"})
        if(verfiedUser.role !="admin")
-            return res.status(401).json({msg:"unAutorized"})
+            return res.status(403).json({msg:"Forbidden"})
 next()
     }
 catch(error){

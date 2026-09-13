@@ -7,9 +7,9 @@ export const auth=(req:Request ,res:Response,next:NextFunction) =>{
         return res.status(401).json({msg:"unAuthoried"})
        }
        try{
-        const verfied = jwt.verify(token,process.env.JWT_TOKEN as string) as {id : string , role : string };
+        const verfied = jwt.verify(token,process.env.JWT_TOKEN as string ) as {id : string , role : string };
          if(!verfied){
-           return res.status(401).json({msg:"unAuthorize"})
+           return res.status(401).json({msg:"unAuthorized"})
          }
         req.user={
             id:verfied.id,
