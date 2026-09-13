@@ -1,7 +1,7 @@
 import {Router} from "express"
 import{chooseSkill} from "../controllers/skillController"
 import{ChooseTrack,GetTracks ,GetRoadmaps} from "../controllers/techUserController"
-import {auth} from "../middleware/authMidddleware"
+import {auth} from "../middleware/authMiddleware"
 
 const userRouters =Router()
 

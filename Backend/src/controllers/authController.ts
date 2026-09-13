@@ -4,9 +4,9 @@ import jwt from "jsonwebtoken"
 import {User} from "../models/userModel"
 
 const maxAge = 60 *60 ;
-const JWT_SECRET = process.env.JWT_TOKEN || "skill-tracker-dev-secret-key-change-me";
+//const JWT_SECRET = process.env.JWT_TOKEN || "skill-tracker-dev-secret-key-change-me";
 const createToken =(id:string , role :string) :string =>{
-    return jwt.sign({id , role} , JWT_SECRET, {expiresIn:maxAge})
+    return jwt.sign({id , role} , process.env.JWT_TOKEN as string , {expiresIn:maxAge})
 }
 export const SignUp = async(req:Request ,res:Response) =>{
      try {
@@ -18,7 +18,7 @@ export const SignUp = async(req:Request ,res:Response) =>{
         return res.status(400).json({msg:"user already exists"})
     }
     const hashedPass = await bcrypt.hash(password,10)
-    User.create({
+    await User.create({
         userName , 
         email,
         password :hashedPass,
