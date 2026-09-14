@@ -52,11 +52,6 @@ const topicSchema = new mongoose.Schema(
       trim: true,
     },
 
-    estimatedTime: {
-      type: Number,
-      min: 0,
-    },
-
     order: {
       type: Number,
       required: true,

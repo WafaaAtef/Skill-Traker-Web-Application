@@ -28,10 +28,10 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    skill:{
+    skill:[{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Skill"
-    },
+    }],
     track:{
       type:mongoose.Schema.Types.ObjectId,
       ref :"Track"

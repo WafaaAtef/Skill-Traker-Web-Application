@@ -3,6 +3,7 @@ import {Track} from "../models/TrackModel";
 import {User} from "../models/userModel";
 import {Skill} from "../models/userModel"; 
 import {Roadmap} from "../models/roadMapModel";
+import { UserProgress } from "../models/userProgressModel";
 
 export const GetTracks =async (req:Request,res:Response) =>{
 try{
@@ -127,5 +128,49 @@ export const addUserSkill = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("addUserSkill error:", err);
     return res.status(500).json({ message: "Failed to add skill" });
+  }
+};
+
+export const completeTopic = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ msg: "user not found" });
+    }
+
+    const roadmapId = req.body?.roadmapId;
+    const topicId = req.body?.topicId;
+
+    if (!roadmapId || !topicId) {
+      return res.status(400).json({
+        msg: "roadmapId and topicId are required",
+      });
+    }
+
+    const roadmapExists = await Roadmap.findById(roadmapId);
+    if (!roadmapExists) {
+      return res.status(404).json({ msg: "roadmap not found" });
+    }
+
+    const progress = await UserProgress.findOneAndUpdate(
+      { user: req.user.id, roadmap: roadmapId },
+      {
+        $addToSet: {
+          completedTopics: { topicId },
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    return res.status(200).json({
+      msg: "topic completed successfully",
+      completedTopics: progress?.completedTopics || [{ topicId }],
+    });
+  } catch (error) {
+    console.error("completeTopic error:", error);
+    return res.status(500).json({ msg: "server error" });
   }
 };
