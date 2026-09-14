@@ -34,6 +34,7 @@ const skillOptions = {
 };
 
 type SkillCategory = keyof typeof skillOptions;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function SkillSetup() {
   const router = useRouter();
@@ -80,7 +81,7 @@ export default function SkillSetup() {
   };
 
   try {
-    const res = await fetch("http://localhost:3000/userApi/user/skills", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/userApi/user/skills`, {
       method: "POST",
       credentials: "include", 
       headers: { "Content-Type": "application/json" },
