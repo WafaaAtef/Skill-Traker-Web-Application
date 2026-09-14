@@ -30,14 +30,7 @@ const skillOptions = {
     "Web Security",
     "Cryptography",
     "Ethical Hacking",
-  ],
-
-  English: [
-    "Reading",
-    "Writing",
-    "Listening",
-    "Speaking",
-  ],
+  ]
 };
 
 type SkillCategory = keyof typeof skillOptions;
@@ -74,23 +67,39 @@ export default function SkillSetup() {
     skill !== "" &&
     months !== "";
 
-  const handleGetRoadmap = () => {
-    if (!isFormValid) return;
+  const handleGetRoadmap = async () => {
+  if (!isFormValid) return;
 
-    const learningPlan = {
-      category,
-      skill,
-      duration: {
-        months: Number(months),
-        weeks: Number(weeks),
-      },
-    };
+  const learningPlan = {
+    category,
+    skill,
+    duration: {
+      months: Number(months),
+      weeks: Number(weeks),
+    },
+  };
 
-    console.log("Learning Plan:", learningPlan);
+  try {
+    const res = await fetch("http://localhost:3000/userApi/user/skills", {
+      method: "POST",
+      credentials: "include", 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(learningPlan),
+    });
 
-    // Temporary navigation.
-    // Later the backend API will be called here.
-    router.push("/roadmap");
+    if (res.status === 401) {
+      router.push("/welcomePage");
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error(`Failed to create skill: ${res.status}`);
+    }
+
+    router.push("/dashboard");
+    } catch (err) {
+      console.error("Error creating skill:", err);
+    }
   };
 
   return (
