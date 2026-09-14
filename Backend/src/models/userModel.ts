@@ -3,16 +3,16 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     firstName: {
-  type: String,
-  required: true,
-  trim: true,
-},
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-lastName: {
-  type: String,
-  required: true,
-  trim: true,
-},
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
     email: {
       type: String,
@@ -26,22 +26,27 @@ lastName: {
       type: String,
       required: true,
     },
-     country :{
-    type: String
-},
+
+    country: {
+      type: String,
+    },
+
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
     },
-    skill:[{
+
+    skill: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Skill"
     }],
-    track:{
-      type:mongoose.Schema.Types.ObjectId,
-      ref :"Track"
+
+    track: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Track"
     },
+
     profileVisibility: {
       type: String,
       enum: ["public", "private"],
@@ -56,12 +61,12 @@ lastName: {
 export const User = mongoose.model("User", userSchema);
 
 const SkillSchema = new mongoose.Schema({
-    name: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    }
-  })
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+  }
+});
 
-export const Skill = mongoose.model("Skill",SkillSchema)
+export const Skill = mongoose.model("Skill", SkillSchema);
