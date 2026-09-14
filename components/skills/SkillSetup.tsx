@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -56,22 +57,25 @@ export default function SkillSetup() {
   }, [API_URL]);
 
   const isFormValid =
-    selectedTrackId !== "" &&
-    months !== "";
+    selectedTrackId !== "" && months !== "";
 
   const handleGetRoadmap = () => {
     if (!isFormValid) return;
 
-router.push(
-  `/roadmap?trackId=${selectedTrackId}&months=${months}&weeks=${weeks}`
-);  };
+    router.push(
+      `/roadmap?trackId=${selectedTrackId}&months=${months}&weeks=${weeks}`
+    );
+  };
+
+  const selectedTrack = tracks.find(
+    (track) => track._id === selectedTrackId
+  );
 
   return (
     <main className="min-h-screen bg-[#B85F35] px-5 py-8 md:px-10">
 
       {/* Header */}
       <header className="mx-auto flex max-w-7xl items-center justify-between">
-
         <div className="flex items-center gap-3 text-[#F5EBDD]">
 
           <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#F5EBDD]/50 text-lg">
@@ -89,7 +93,6 @@ router.push(
           </div>
 
         </div>
-
       </header>
 
       {/* Main */}
@@ -182,13 +185,9 @@ router.push(
                 </p>
               )}
 
-              {selectedTrackId && (
+              {selectedTrack && (
                 <p className="mt-3 text-sm leading-6 text-[#77745F]">
-                  {
-                    tracks.find(
-                      (track) => track._id === selectedTrackId
-                    )?.description
-                  }
+                  {selectedTrack.description}
                 </p>
               )}
 
@@ -211,7 +210,8 @@ router.push(
                 </h2>
 
                 <p className="mt-2 text-sm text-[#77745F]">
-                  Set your timeline and we’ll structure your roadmap around it.
+                  Your time will be used to organize the roadmap around
+                  your learning pace.
                 </p>
 
               </div>
@@ -268,7 +268,7 @@ router.push(
             <button
               onClick={handleGetRoadmap}
               disabled={!isFormValid}
-              className="mt-8 flex w-full items-center justify-center gap-3 rounded-full bg-[#4B5130] px-6 py-4 text-sm font-semibold text-[#F5EBDD] transition hover:bg-[#3D4227] disabled:cursor-not-allowed disabled:opacity-40"
+              className="mt-8 flex w-full items-center justify-center gap-3 rounded-full bg-[#4B5130] px-6 py-4 text-sm font-semibold text-[#F5EBDD] transition hover:bg-[#353827] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Get My Roadmap
               <span className="text-lg">→</span>
@@ -287,11 +287,6 @@ router.push(
     </main>
   );
 }
-
-
-/* -------------------------------- */
-/* Duration Select Component        */
-/* -------------------------------- */
 
 type DurationSelectProps = {
   label: string;
@@ -337,3 +332,4 @@ function DurationSelect({
     </div>
   );
 }
+

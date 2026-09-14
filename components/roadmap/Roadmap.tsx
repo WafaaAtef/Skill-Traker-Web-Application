@@ -1,12 +1,19 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type Resource = {
   _id: string;
   title: string;
-  type: string;
+  type:
+    | "video"
+    | "article"
+    | "course"
+    | "book"
+    | "documentation"
+    | "other";
   url: string;
   duration?: number;
 };
@@ -15,7 +22,7 @@ type Topic = {
   _id: string;
   title: string;
   description: string;
-  estimatedTime: number;
+  estimatedTime?: number;
   order: number;
   resources: Resource[];
 };
@@ -33,35 +40,24 @@ type Roadmap = {
   title: string;
   description: string;
   track: string;
-  level: {
-    _id: string;
-    title: string;
-    order: number;
-  };
   levels: Level[];
 };
 
-type Timeline = {
-  months: number;
-  weeks: number;
-  totalWeeks: number;
-};
-
-type RoadmapResponse = {
-  roadmap: Roadmap;
-  timeline: Timeline;
-};
-
-export default function RoadmapPage() {
+export default function Roadmap() {
   const searchParams = useSearchParams();
 
   const trackId = searchParams.get("trackId");
+  const months = Number(searchParams.get("months") || 0);
+  const weeks = Number(searchParams.get("weeks") || 0);
 
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
-  const [timeline, setTimeline] = useState<Timeline | null>(null);
 
-  const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
+  const [selectedLevelId, setSelectedLevelId] = useState<string | null>(
+    null
+  );
+
   const [completedTopics, setCompletedTopics] = useState<string[]>([]);
+  const [completedLevels, setCompletedLevels] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -70,7 +66,7 @@ export default function RoadmapPage() {
 
   useEffect(() => {
     if (!trackId) {
-      setError("Track not found.");
+      setError("No track selected.");
       setLoading(false);
       return;
     }
@@ -91,10 +87,11 @@ export default function RoadmapPage() {
           throw new Error("Failed to fetch roadmap");
         }
 
-        const data: RoadmapResponse = await response.json();
+        const data = await response.json();
+
+        console.log("Roadmap from backend:", data);
 
         setRoadmap(data.roadmap);
-        setTimeline(data.timeline);
       } catch (error) {
         console.error(error);
         setError("Unable to load roadmap.");
@@ -106,49 +103,109 @@ export default function RoadmapPage() {
     fetchRoadmap();
   }, [API_URL, trackId]);
 
-  const handleCompleteTopic = async (topicId: string) => {
-    try {
-      const response = await fetch(
-        `${API_URL}/userApi/completeTopic/${topicId}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+  const levels = useMemo(() => {
+    if (!roadmap) return [];
 
-      if (!response.ok) {
-        throw new Error("Failed to complete topic");
-      }
+    return [...roadmap.levels].sort(
+      (a, b) => a.order - b.order
+    );
+  }, [roadmap]);
 
-      setCompletedTopics((previous) => [
-        ...previous,
-        topicId,
-      ]);
-    } catch (error) {
-      console.error(error);
+  const totalTopics = levels.reduce(
+    (total, level) => total + level.topics.length,
+    0
+  );
+
+  const progress =
+    totalTopics === 0
+      ? 0
+      : Math.round(
+          (completedTopics.length / totalTopics) * 100
+        );
+
+  const selectedLevel = levels.find(
+    (level) => level._id === selectedLevelId
+  );
+
+  const totalWeeks = months * 4 + weeks;
+
+  /*
+   * Frontend-only time distribution.
+   *
+   * We distribute the available time equally
+   * between levels for now.
+   *
+   * Later we can improve this by using
+   * topic complexity or estimated time.
+   */
+  const levelTime = levels.length
+    ? totalWeeks / levels.length
+    : 0;
+
+  const toggleTopic = (topicId: string) => {
+    setCompletedTopics((current) =>
+      current.includes(topicId)
+        ? current.filter((id) => id !== topicId)
+        : [...current, topicId]
+    );
+  };
+
+  const completeLevel = (level: Level) => {
+    const topicIds = level.topics.map(
+      (topic) => topic._id
+    );
+
+    setCompletedTopics((current) => [
+      ...new Set([...current, ...topicIds]),
+    ]);
+
+    setCompletedLevels((current) => [
+      ...new Set([...current, level._id]),
+    ]);
+  };
+
+  const goToNextLevel = () => {
+    if (!selectedLevel) return;
+
+    const currentIndex = levels.findIndex(
+      (level) => level._id === selectedLevel._id
+    );
+
+    const nextLevel = levels[currentIndex + 1];
+
+    if (nextLevel) {
+      setSelectedLevelId(nextLevel._id);
+    } else {
+      setSelectedLevelId(null);
     }
   };
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#B85F35] px-5 py-10 md:px-10">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-[#F5EBDD]/80">
-            Loading your roadmap...
-          </p>
-        </div>
+      <main className="flex min-h-screen items-center justify-center bg-[#B85F35]">
+        <p className="font-serif text-2xl text-[#F5EBDD]">
+          Building your roadmap...
+        </p>
       </main>
     );
   }
 
   if (error || !roadmap) {
     return (
-      <main className="min-h-screen bg-[#B85F35] px-5 py-10 md:px-10">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-[#F5EBDD]">
+      <main className="flex min-h-screen items-center justify-center bg-[#B85F35] px-5">
+
+        <div className="rounded-[28px] bg-[#F5EBDD] p-8 text-center">
+
+          <h1 className="font-serif text-3xl text-[#353827]">
+            Something went wrong
+          </h1>
+
+          <p className="mt-3 text-sm text-[#77745F]">
             {error || "Roadmap not found."}
           </p>
+
         </div>
+
       </main>
     );
   }
@@ -156,268 +213,159 @@ export default function RoadmapPage() {
   return (
     <main className="min-h-screen bg-[#B85F35] px-5 py-10 md:px-10">
 
-      <div className="mx-auto max-w-6xl">
+      <section className="mx-auto max-w-6xl">
 
         {/* Header */}
-        <header className="mb-12">
 
-          <div className="flex items-center gap-3 text-[#F5EBDD]">
+        <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#F5EBDD]/50 text-lg">
-              ✦
+          <div>
+
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#F5EBDD]/70">
+              Your learning journey
+            </p>
+
+            <h1 className="font-serif text-5xl text-[#F5EBDD] md:text-6xl">
+              {roadmap.title}
+            </h1>
+
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[#F5EBDD]/75">
+              {roadmap.description}
+            </p>
+
+          </div>
+
+          {/* Progress */}
+
+          <div className="rounded-3xl bg-[#F5EBDD] px-6 py-5 text-[#353827]">
+
+            <p className="text-xs uppercase tracking-[0.2em] text-[#77745F]">
+              Progress
+            </p>
+
+            <div className="mt-2 flex items-end gap-2">
+
+              <span className="font-serif text-3xl">
+                {progress}%
+              </span>
+
+              <span className="mb-1 text-xs text-[#77745F]">
+                completed
+              </span>
+
             </div>
 
-            <div>
-              <h2 className="font-serif text-xl leading-none md:text-2xl">
-                SkillRoadmap
-              </h2>
+            <div className="mt-3 h-2 w-40 overflow-hidden rounded-full bg-[#D8CEBB]">
 
-              <p className="mt-1 text-[9px] uppercase tracking-[0.3em] opacity-80">
-                Learn · Practice · Grow
-              </p>
+              <div
+                className="h-full rounded-full bg-[#4B5130] transition-all"
+                style={{ width: `${progress}%` }}
+              />
+
             </div>
 
           </div>
 
-        </header>
+        </div>
 
-        {/* Intro */}
-        <section className="mb-12">
+        {/* =============================== */}
+        {/* LEVEL SELECTION */}
+        {/* =============================== */}
 
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#F5EBDD]/70">
-            Your learning journey
-          </p>
+        {!selectedLevel && (
 
-          <h1 className="mt-3 font-serif text-5xl leading-tight text-[#F5EBDD] md:text-6xl">
-            {roadmap.title}
-          </h1>
-
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-[#F5EBDD]/75 md:text-base">
-            {roadmap.description}
-          </p>
-
-          {/* Timeline */}
-          {timeline && (
-            <div className="mt-6 inline-flex items-center gap-4 rounded-full bg-[#4B5130] px-5 py-3 text-sm text-[#F5EBDD]">
-
-              <span>
-                {timeline.months}{" "}
-                {timeline.months === 1 ? "month" : "months"}
-              </span>
-
-              {timeline.weeks > 0 && (
-                <>
-                  <span className="opacity-40">·</span>
-
-                  <span>
-                    {timeline.weeks}{" "}
-                    {timeline.weeks === 1 ? "week" : "weeks"}
-                  </span>
-                </>
-              )}
-
-              <span className="opacity-40">·</span>
-
-              <span>
-                {timeline.totalWeeks} total weeks
-              </span>
-
-            </div>
-          )}
-
-        </section>
-
-        {/* LEVELS */}
-        {!selectedLevel ? (
-
-          <section>
-
-            <div className="mb-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#F5EBDD]/70">
-                Choose your focus
-              </p>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-
-              {roadmap.levels
-                .sort((a, b) => a.order - b.order)
-                .map((level, index) => (
-
-                  <button
-                    key={level._id}
-                    onClick={() => setSelectedLevel(level)}
-                    className="group rounded-[28px] bg-[#F5EBDD] p-7 text-left transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
-                  >
-
-                    <div className="flex items-start justify-between">
-
-                      <span className="font-serif text-4xl text-[#B85F35]/50">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-
-                      <span className="text-xl text-[#4B5130] transition group-hover:translate-x-1">
-                        ↗
-                      </span>
-
-                    </div>
-
-                    <h2 className="mt-8 font-serif text-2xl text-[#353827]">
-                      {level.title}
-                    </h2>
-
-                    <p className="mt-3 min-h-[48px] text-sm leading-6 text-[#77745F]">
-                      {level.description}
-                    </p>
-
-                    <p className="mt-5 text-sm text-[#77745F]">
-                      {level.topics.length}{" "}
-                      {level.topics.length === 1
-                        ? "topic"
-                        : "topics"}
-                    </p>
-
-                    <div className="mt-7 text-sm font-semibold text-[#4B5130]">
-                      Open Focus →
-                    </div>
-
-                  </button>
-
-                ))}
-
-            </div>
-
-          </section>
-
-        ) : (
-
-          /* SELECTED LEVEL */
-          <section>
-
-            <button
-              onClick={() => setSelectedLevel(null)}
-              className="mb-8 text-sm font-semibold text-[#F5EBDD]/80 transition hover:text-[#F5EBDD]"
-            >
-              ← Back to focuses
-            </button>
+          <div>
 
             <div className="mb-8">
 
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#F5EBDD]/70">
-                Focus {String(selectedLevel.order).padStart(2, "0")}
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#F5EBDD]/60">
+                Your roadmap
               </p>
 
-              <h2 className="mt-2 font-serif text-4xl text-[#F5EBDD] md:text-5xl">
-                {selectedLevel.title}
+              <h2 className="mt-2 font-serif text-4xl text-[#F5EBDD]">
+                Choose your level
               </h2>
 
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#F5EBDD]/75">
-                {selectedLevel.description}
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[#F5EBDD]/70">
+                Move through each level at your own pace. You can always
+                come back to a level you have already completed.
               </p>
 
             </div>
 
-            <div className="rounded-[32px] bg-[#F5EBDD] p-6 md:p-10">
+            <div className="space-y-5">
 
-              <div className="space-y-4">
+              {levels.map((level, index) => {
 
-                {selectedLevel.topics
-                  .sort((a, b) => a.order - b.order)
-                  .map((topic) => {
+                const completed =
+                  completedLevels.includes(level._id);
 
-                    const isCompleted =
-                      completedTopics.includes(topic._id);
+                const topicsCount =
+                  level.topics.length;
 
-                    return (
-                      <div
-                        key={topic._id}
-                        className="rounded-2xl border border-[#D8CEBB] bg-[#FBF7EF] p-5"
-                      >
+                const estimatedLevelWeeks =
+                  levelTime > 0
+                    ? Math.max(1, Math.round(levelTime))
+                    : 0;
 
-                        <div className="flex items-start gap-4">
+                return (
 
-                          {/* Complete */}
-                          <button
-                            onClick={() =>
-                              handleCompleteTopic(topic._id)
-                            }
-                            className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${
-                              isCompleted
-                                ? "bg-[#4B5130] text-[#F5EBDD]"
-                                : "border border-[#B8AF9E] text-[#77745F] hover:border-[#4B5130] hover:text-[#4B5130]"
-                            }`}
-                          >
-                            {isCompleted ? "✓" : "○"}
-                          </button>
+                  <button
+                    key={level._id}
+                    onClick={() =>
+                      setSelectedLevelId(level._id)
+                    }
+                    className="group w-full rounded-[30px] bg-[#F5EBDD] p-6 text-left transition hover:-translate-y-1 hover:shadow-xl md:p-8"
+                  >
 
-                          {/* Topic */}
-                          <div className="flex-1">
+                    <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
 
-                            <div className="flex flex-col justify-between gap-2 sm:flex-row">
+                      <div className="flex items-start gap-5">
 
-                              <h3
-                                className={`font-semibold ${
-                                  isCompleted
-                                    ? "text-[#77745F] line-through"
-                                    : "text-[#353827]"
-                                }`}
-                              >
-                                {topic.title}
-                              </h3>
+                        {/* Number */}
 
-                              <span className="text-xs text-[#77745F]">
-                                {topic.estimatedTime} min
+                        <div
+                          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                            completed
+                              ? "bg-[#4B5130] text-[#F5EBDD]"
+                              : "bg-[#D8CEBB] text-[#45482F]"
+                          }`}
+                        >
+                          {completed
+                            ? "✓"
+                            : String(index + 1).padStart(2, "0")}
+                        </div>
+
+                        <div>
+
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#77745F]">
+                            Level {index + 1}
+                          </p>
+
+                          <h3 className="mt-1 font-serif text-3xl text-[#353827]">
+                            {level.title}
+                          </h3>
+
+                          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#77745F]">
+                            {level.description}
+                          </p>
+
+                          <div className="mt-4 flex flex-wrap gap-4 text-xs font-semibold text-[#77745F]">
+
+                            <span>
+                              {topicsCount}{" "}
+                              {topicsCount === 1
+                                ? "topic"
+                                : "topics"}
+                            </span>
+
+                            {estimatedLevelWeeks > 0 && (
+                              <span>
+                                ~ {estimatedLevelWeeks}{" "}
+                                {estimatedLevelWeeks === 1
+                                  ? "week"
+                                  : "weeks"}
                               </span>
-
-                            </div>
-
-                            <p className="mt-2 text-sm leading-6 text-[#77745F]">
-                              {topic.description}
-                            </p>
-
-                            {/* Resources */}
-                            {topic.resources.length > 0 && (
-                              <div className="mt-4">
-
-                                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-[#77745F]">
-                                  Resources
-                                </p>
-
-                                <div className="space-y-2">
-
-                                  {topic.resources.map(
-                                    (resource) => (
-
-                                      <a
-                                        key={resource._id}
-                                        href={resource.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center justify-between rounded-xl border border-[#D8CEBB] bg-white/40 px-4 py-3 text-sm transition hover:border-[#4B5130]"
-                                      >
-
-                                        <div>
-                                          <p className="font-medium text-[#45482F]">
-                                            {resource.title}
-                                          </p>
-
-                                          <p className="mt-1 text-xs uppercase tracking-wide text-[#77745F]">
-                                            {resource.type}
-                                          </p>
-                                        </div>
-
-                                        <span className="text-[#4B5130]">
-                                          ↗
-                                        </span>
-
-                                      </a>
-
-                                    )
-                                  )}
-
-                                </div>
-
-                              </div>
                             )}
 
                           </div>
@@ -425,29 +373,256 @@ export default function RoadmapPage() {
                         </div>
 
                       </div>
-                    );
-                  })}
+
+                      <span className="shrink-0 rounded-full bg-[#4B5130] px-5 py-3 text-xs font-semibold text-[#F5EBDD] transition group-hover:bg-[#353827]">
+                        {completed
+                          ? "Review Level →"
+                          : "Start Level →"}
+                      </span>
+
+                    </div>
+
+                  </button>
+
+                );
+              })}
+
+            </div>
+
+          </div>
+
+        )}
+
+        {/* =============================== */}
+        {/* SELECTED LEVEL */}
+        {/* =============================== */}
+
+        {selectedLevel && (
+
+          <div>
+
+            {/* Back */}
+
+            <button
+              onClick={() => setSelectedLevelId(null)}
+              className="mb-8 text-sm font-semibold text-[#F5EBDD]/80 transition hover:text-[#F5EBDD]"
+            >
+              ← Back to levels
+            </button>
+
+            {/* Level Header */}
+
+            <div className="mb-8 rounded-[30px] bg-[#F5EBDD] p-7 md:p-9">
+
+              <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+
+                <div>
+
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#77745F]">
+                    Level{" "}
+                    {levels.findIndex(
+                      (level) =>
+                        level._id === selectedLevel._id
+                    ) + 1}
+                  </p>
+
+                  <h2 className="mt-2 font-serif text-4xl text-[#353827]">
+                    {selectedLevel.title}
+                  </h2>
+
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-[#77745F]">
+                    {selectedLevel.description}
+                  </p>
+
+                </div>
+
+                <div className="rounded-2xl bg-[#E8E2D3] px-5 py-4">
+
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#77745F]">
+                    Topics
+                  </p>
+
+                  <p className="mt-1 font-serif text-2xl text-[#353827]">
+                    {selectedLevel.topics.length}
+                  </p>
+
+                </div>
 
               </div>
 
-              {/* Continue */}
+            </div>
+
+            {/* Topics */}
+
+            <div className="space-y-4">
+
+              {[...selectedLevel.topics]
+                .sort((a, b) => a.order - b.order)
+                .map((topic, topicIndex) => {
+
+                  const completed =
+                    completedTopics.includes(topic._id);
+
+                  return (
+
+                    <article
+                      key={topic._id}
+                      className={`rounded-[28px] border p-6 transition ${
+                        completed
+                          ? "border-[#4B5130] bg-[#E8E2D3]"
+                          : "border-[#D8CEBB] bg-[#F5EBDD]"
+                      }`}
+                    >
+
+                      <div className="flex gap-4">
+
+                        {/* Checkbox */}
+
+                        <button
+                          onClick={() =>
+                            toggleTopic(topic._id)
+                          }
+                          className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition ${
+                            completed
+                              ? "border-[#4B5130] bg-[#4B5130] text-[#F5EBDD]"
+                              : "border-[#A6A18D] text-transparent hover:border-[#4B5130]"
+                          }`}
+                        >
+                          ✓
+                        </button>
+
+                        <div className="min-w-0 flex-1">
+
+                          <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+
+                            <div>
+
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#77745F]">
+                                Topic {topicIndex + 1}
+                              </p>
+
+                              <h3
+                                className={`mt-1 font-serif text-2xl ${
+                                  completed
+                                    ? "text-[#77745F] line-through"
+                                    : "text-[#353827]"
+                                }`}
+                              >
+                                {topic.title}
+                              </h3>
+
+                              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#77745F]">
+                                {topic.description}
+                              </p>
+
+                            </div>
+
+                            {topic.estimatedTime !==
+                              undefined && (
+
+                              <span className="shrink-0 text-xs font-semibold text-[#77745F]">
+                                ⏱ {topic.estimatedTime}
+                              </span>
+
+                            )}
+
+                          </div>
+
+                          {/* Resources */}
+
+                          <div className="mt-6 border-t border-[#D8CEBB] pt-5">
+
+                            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#77745F]">
+                              Learning resources
+                            </p>
+
+                            <div className="grid gap-3 md:grid-cols-2">
+
+                              {topic.resources.map(
+                                (resource) => (
+
+                                  <a
+                                    key={resource._id}
+                                    href={resource.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-between rounded-2xl bg-[#FBF7EF] px-4 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-md"
+                                  >
+
+                                    <div>
+
+                                      <p className="text-sm font-semibold text-[#45482F]">
+                                        {resource.title}
+                                      </p>
+
+                                      <p className="mt-1 text-xs text-[#77745F]">
+                                        {resource.type}
+
+                                        {resource.duration !==
+                                          undefined &&
+                                          ` · ${resource.duration} min`}
+                                      </p>
+
+                                    </div>
+
+                                    <span className="text-[#4B5130]">
+                                      →
+                                    </span>
+
+                                  </a>
+
+                                )
+                              )}
+
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </article>
+
+                  );
+                })}
+
+            </div>
+
+            {/* Level Navigation */}
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+
               <button
-                className="mt-8 flex w-full items-center justify-center gap-3 rounded-full bg-[#4B5130] px-6 py-4 text-sm font-semibold text-[#F5EBDD] transition hover:bg-[#3D4227]"
+                onClick={() =>
+                  completeLevel(selectedLevel)
+                }
+                className="flex-1 rounded-full bg-[#4B5130] px-6 py-4 text-sm font-semibold text-[#F5EBDD] transition hover:bg-[#353827]"
               >
-                Continue
-                <span className="text-lg">
-                  →
-                </span>
+                Mark Level Complete ✓
+              </button>
+
+              <button
+                onClick={goToNextLevel}
+                className="flex-1 rounded-full border border-[#F5EBDD]/40 px-6 py-4 text-sm font-semibold text-[#F5EBDD] transition hover:bg-[#F5EBDD]/10"
+              >
+                {levels.findIndex(
+                  (level) =>
+                    level._id === selectedLevel._id
+                ) === levels.length - 1
+                  ? "Back to Levels"
+                  : "Continue to Next Level →"}
               </button>
 
             </div>
 
-          </section>
+          </div>
 
         )}
 
-      </div>
+      </section>
 
     </main>
   );
 }
+
