@@ -5,7 +5,7 @@ import {auth} from "../middleware/authMiddleware";
 import {addSkillSchema} from '../validators/skill.validator';
 import { validate } from "../middleware/validate";
 
-const userRouters =Router()
+const userRouters =Router();
 
 userRouters.post("/chooseSkill/:id" , auth ,chooseSkill)
 userRouters.post("/ChooseTrack/:id" , auth ,ChooseTrack)
