@@ -92,11 +92,12 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          userName: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
-          email: form.email.trim(),
-          password: form.password,
-          country: form.country,
-        }),
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        country: form.country,
+      }),
       });
 
       const data = await response.json().catch(() => ({ msg: 'Signup failed' }));
