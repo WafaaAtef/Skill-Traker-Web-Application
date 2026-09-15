@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 
 app.use((req, res, next) => {
-  const origin = "http://localhost:3000";
+  const origin = `process.env.FRONTEND_URL || "http://localhost:3000`;
 
   res.header("Access-Control-Allow-Origin", origin);
   res.header("Access-Control-Allow-Credentials", "true");

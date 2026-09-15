@@ -81,7 +81,7 @@ export default function SkillSetup() {
   };
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/userApi/user/skills`, {
+    const res = await fetch(`${API_BASE_URL}/userApi/user/skills`, {
       method: "POST",
       credentials: "include", 
       headers: { "Content-Type": "application/json" },
