@@ -53,8 +53,8 @@ export default function SkillDashboard() {
 
   const handleSignOut = async () => {
     try {
-      const res = await fetch("http://localhost:3000/authApi/signout", {
-        method: "POST",
+      const res = await fetch("http://localhost:3000/authApi/SignOut", {
+        method: "GET",
         credentials: "include",
       });
 
