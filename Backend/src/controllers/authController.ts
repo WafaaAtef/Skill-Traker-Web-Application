@@ -10,9 +10,9 @@ const createToken =(id:string , role :string) :string =>{
 }
 export const SignUp = async(req:Request ,res:Response) =>{
      try {
-    const{firstName, lastName , email ,password , country} =req.body ;
-    if(!firstName || !lastName || !email  || !password )
-        return res.status(400).json({msg :"all fields are requred !"})
+    const{firstName, lastName , email ,country, password} =req.body ;
+    if(!firstName || !lastName || !email  || !password || !country)
+        return res.status(400).json({msg :"all fields are requred"})
     const isExist = await User.findOne({email})
     if(isExist){
         return res.status(400).json({msg:"user already exists"})
