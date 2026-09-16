@@ -18,12 +18,19 @@ export const SignUp = async(req:Request ,res:Response) =>{
         return res.status(400).json({msg:"user already exists"})
     }
     const hashedPass = await bcrypt.hash(password,10)
-    await User.create({
+    const newUser = await User.create({
         firstName,
         lastName, 
         email,
         password :hashedPass,
         country
+    })
+    const token = createToken(newUser._id.toString(), newUser.role)
+    res.cookie("token", token, {
+        maxAge: maxAge * 1000,
+        httpOnly: true,
+        sameSite: "none",
+        secure: true
     })
     res.status(200).json({
         msg:"user created"
@@ -55,7 +62,7 @@ export const SignUp = async(req:Request ,res:Response) =>{
       const token =createToken(user.id ,user.role)
 
       res.cookie("token",token,
-        {maxAge:maxAge* 1000 ,httpOnly:true, sameSite:"lax"})
+        {maxAge:maxAge* 1000 ,httpOnly:true, sameSite:"none", secure:true})
 
       res.status(200)
           .json({msg:"Logged in" })
@@ -71,7 +78,11 @@ try{
     if(!req.user){
             return res.status(401).json({msg:"user not found"})
     }
-    res.clearCookie("token")
+    res.clearCookie("token", {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true
+    })
     res.status(200).json({msg:"Logged Out successfully"})
   }
     catch(error){
