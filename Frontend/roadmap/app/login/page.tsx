@@ -33,15 +33,20 @@ export default function Home() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/authApi/SignIn`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: form.email.trim(),
-          password: form.password,
-        }),
-      });
+      const response = await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/authApi/SignIn`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      email: form.email.trim(),
+      password: form.password,
+    }),
+  }
+);
 
       const data = await response.json().catch(() => ({ msg: 'Login failed' }));
 

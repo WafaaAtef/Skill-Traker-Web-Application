@@ -25,10 +25,13 @@ export default function SkillDashboard() {
   useEffect(() => {
     const fetchUserSkills = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/userApi/user/skills`, {
-          method: "GET",
-          credentials: "include",
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/userApi/user/skills`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
 
         if (res.status === 401) {
           router.push("/welcomePage");
@@ -54,10 +57,13 @@ export default function SkillDashboard() {
 
   const handleSignOut = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/authApi/SignOut`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/authApi/SignOut`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
 
       if (!res.ok) {
         console.error("Sign out failed:", res.status);
@@ -89,9 +95,8 @@ export default function SkillDashboard() {
             <button
               key={item}
               type="button"
-              className={`${styles.navItem} ${
-                activeNav === item ? styles.navItemActive : ""
-              }`}
+              className={`${styles.navItem} ${activeNav === item ? styles.navItemActive : ""
+                }`}
               onClick={() => setActiveNav(item)}
             >
               {item}

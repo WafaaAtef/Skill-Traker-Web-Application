@@ -38,30 +38,31 @@ catch(error)
      return res.status(500).json({msg:"server error"})}
 }
 
-//////////////////////////////
+////////////////////////////
 export const ChooseTrack = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ msg: "unAuthorized" });
     }
 
-    const verfiedUser = await User.findById(req.user.id);
+    const verifiedUser = await User.findById(req.user.id);
     const track = await Track.findById(req.params.id);
 
-    if (!verfiedUser || !track) {
+    if (!verifiedUser || !track) {
       return res.status(400).json({ msg: "user or track not found" });
     }
 
-    const hasSkill = verfiedUser.skill.some((skillId) =>
-      skillId.equals(track.skill)
+    const userSkills = verifiedUser.skill || [];
+    const hasSkill = userSkills.some((skillId) =>
+      skillId && typeof skillId.equals === "function" && skillId.equals(track.skill)
     );
 
     if (!hasSkill) {
       return res.status(400).json({ msg: "wrong skill" });
     }
 
-    verfiedUser.track = track._id;
-    await verfiedUser.save();
+    verifiedUser.track = track._id;
+    await verifiedUser.save();
 
     return res.status(201).json({ msg: "track selected successfully" });
   } catch (error) {
@@ -84,7 +85,7 @@ export const getUserSkills = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const skills = user.skill.map((s: any) => ({
+    const skills = (user.skill || []).map((s: any) => ({
       id: s._id.toString(),
       name: s.name,
     }));
@@ -111,7 +112,7 @@ export const addUserSkill = async (req: Request, res: Response) => {
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { $addToSet: { skill: skillId } }, // prevents duplicates
+      { $addToSet: { skill: skillId } },
       { new: true }
     ).populate("skill", "name");
 
@@ -119,7 +120,7 @@ export const addUserSkill = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const skills = user.skill.map((s: any) => ({
+    const skills = (user.skill || []).map((s: any) => ({
       id: s._id.toString(),
       name: s.name,
     }));

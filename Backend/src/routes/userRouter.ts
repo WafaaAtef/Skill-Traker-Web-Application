@@ -1,7 +1,7 @@
 import {Router} from "express";
 import{chooseSkill} from "../controllers/skillController";
 import{ChooseTrack,GetTracks ,GetRoadmaps, getUserSkills, addUserSkill, completeTopic} from "../controllers/techUserController";
-import {auth} from "../middleware/authMidddleware";
+import {auth} from "../middleware/authMiddleware";
 import {addSkillSchema} from '../validators/skill.validator';
 import { validate } from "../middleware/validate";
 

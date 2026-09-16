@@ -1,79 +1,94 @@
-import {Request ,Response} from "express"
+import { Request, Response } from "express"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import {User} from "../models/userModel"
+import { User } from "../models/userModel"
 
-const maxAge = 60 *60 ;
+const maxAge = 60 * 60;
 const JWT_SECRET = process.env.JWT_TOKEN || "skill-tracker-dev-secret-key-change-me";
-const createToken =(id:string , role :string) :string =>{
-    return jwt.sign({id , role} , JWT_SECRET, {expiresIn:maxAge})
+const createToken = (id: string, role: string): string => {
+  return jwt.sign({ id, role }, JWT_SECRET, { expiresIn: maxAge })
 }
-export const SignUp = async(req:Request ,res:Response) =>{
-     try {
-    const{userName , email ,password , country} =req.body ;
-    if(!userName || !email  || !password )
-        return res.status(400).json({msg :"all fields are requred !"})
-    const isExist = await User.findOne({email})
-    if(isExist){
-        return res.status(400).json({msg:"user already exists"})
+export const SignUp = async (req: Request, res: Response) => {
+  try {
+    const { userName, email, password, country } = req.body;
+    if (!userName || !email || !password)
+      return res.status(400).json({ msg: "all fields are requred !" })
+    const isExist = await User.findOne({ email })
+    if (isExist) {
+      return res.status(400).json({ msg: "user already exists" })
     }
-    const hashedPass = await bcrypt.hash(password,10)
+    const hashedPass = await bcrypt.hash(password, 10)
     await User.create({
-        userName, 
-        email,
-        password :hashedPass,
-        country
+      userName,
+      email,
+      password: hashedPass,
+      country
     })
     res.status(200).json({
-        msg:"user created"
+      msg: "user created"
     })
-     }
-    catch(error){
-      console.log(error);
-      return res.status(500).json({msg :"internal server error"})
-    }
+  }
+  catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "internal server error" })
+  }
 
- }
+}
 /////////////////////////////////////////////////////////
- export const SignIn = async(req:Request ,res:Response) =>{
-   try {
-      const{email ,password} =req.body ;
-      if(!email || !password )
-        return res.status(400)
-          .json({msg :"all fields are requred !"})
-      const user= await User.findOne({email})
-      if(!user){
-        return res.status(400)
-          .json({msg :"invalid email or password"})}
-   
-      const isMatch =await bcrypt.compare(password,user.password)
-      if(!isMatch)
-        return res.status(400)
-          .json({msg :"invalid email or password"})
-     
-      const token =createToken(user.id ,user.role)
-
-      res.cookie("token",token,
-        {maxAge:maxAge* 1000 ,httpOnly:true, sameSite:"lax"})
-
-      res.status(200)
-          .json({msg:"Logged in" })
+export const SignIn = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400)
+        .json({ msg: "all fields are requred !" })
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(400)
+        .json({ msg: "invalid email or password" })
     }
-  catch(error){
-       return res.status(500)
-          .json({msg :"internal server error"})}}
+
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch)
+      return res.status(400)
+        .json({ msg: "invalid email or password" })
+
+    const token = createToken(user.id, user.role)
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200)
+      .json({ msg: "Logged in" })
+  }
+  catch (error) {
+    return res.status(500)
+      .json({ msg: "internal server error" })
+  }
+}
 
 ///////////////////////////////
 
- export const SignOut = (req:Request ,res:Response) =>{
-try{
-    if(!req.user){
-            return res.status(401).json({msg:"user not found"})
-    }
-    res.clearCookie("token")
-    res.status(200).json({msg:"Logged Out successfully"})
+export const SignOut = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+    });
+
+    return res.status(200).json({
+      message: "Signed out successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
-    catch(error){
-       return res.status(500)
-          .json({msg :"internal server error"})}}
+};
 
