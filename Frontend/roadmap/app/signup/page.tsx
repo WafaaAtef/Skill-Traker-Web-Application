@@ -106,7 +106,7 @@ export default function Home() {
         throw new Error(data?.msg || 'Signup failed');
       }
 
-      router.push('/login');
+      router.push('/dashboard');
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Signup failed');
     } finally {

@@ -177,23 +177,22 @@ export const completeTopic = async (req: Request, res: Response) => {
 
 ///////////////////
 
-export const GetSkills = async (req: Request, res: Response) => { 
-  try { 
-    if (!req.user) { 
-      return res.status(401).json({ msg: "unAuthorized" }); 
-    } 
-    const skills = await Skill.find().select("name"); 
-    
-    const result = skills.map((s: any) => ({ 
-      id: s._id.toString(), 
-      name: s.name, })); 
+export const GetSkills = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ msg: "unAuthorized" });
+    }
+    const skills = await Skill.find().select("name category");
 
-      return res.status(200).json({ 
-        skills: result 
-      }); 
-    
-    
-    } catch (error) { 
-      console.error("GetSkills error:", error); return res.status(500).json({ msg: "server error" }); 
-    } 
+    const result = skills.map((s: any) => ({
+      id: s._id.toString(),
+      name: s.name,
+      category: s.category,
+    }));
+
+    return res.status(200).json({ skills: result });
+  } catch (error) {
+    console.error("GetSkills error:", error);
+    return res.status(500).json({ msg: "server error" });
+  }
 };

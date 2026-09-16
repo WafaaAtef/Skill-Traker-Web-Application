@@ -4,142 +4,97 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 
-const skillOptions = {
-  Frontend: [
-    "HTML & CSS",
-    "JavaScript",
-    "React",
-    "Next.js",
-  ],
-
-  Backend: [
-    "Node.js",
-    "Express.js",
-    "Databases",
-    "APIs",
-  ],
-
-  "AI & Machine Learning": [
-    "Python for AI",
-    "Machine Learning",
-    "Deep Learning",
-    "Computer Vision",
-  ],
-
-  "Cyber Security": [
-    "Networking",
-    "Web Security",
-    "Cryptography",
-    "Ethical Hacking",
-  ]
-};
-
 type CatalogSkill = { 
   id: string; 
-  name: string 
+  name: string;
+  category: string;
 }; 
 
-type SkillCategory = keyof typeof skillOptions;
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function SkillSetup() {
   const router = useRouter();
 
-  const [category, setCategory] = useState<SkillCategory | "">("");
-  const [skill, setSkill] = useState("");
+   const [category, setCategory] = useState("");
+  const [skillId, setSkillId] = useState(""); 
 
-  // Months are required
   const [months, setMonths] = useState("");
-
-  // Weeks are optional
   const [weeks, setWeeks] = useState("0");
 
   const [skillCatalog, setSkillCatalog] = useState<CatalogSkill[]>([]);
-
   const [catalogError, setCatalogError] = useState(""); 
   
-  useEffect(() => { 
-    
-    const fetchSkillCatalog = async () => { 
-      try { 
-        const res = await fetch(`${API_BASE_URL}/userApi/skills`, { 
-          method: "GET", 
-          credentials: "include", 
-        }); 
-        
-        if (res.status === 401) { 
-          router.push("/welcomePage"); 
-          return; 
-        } 
-        
-        if (!res.ok) 
-          throw new Error(`Failed to load skills: ${res.status}`); 
-        
-        const data = await res.json(); 
-        
-        setSkillCatalog(data.skills || []); 
-      
-      } catch (err) { 
-        console.error("Error fetching skill catalog:", err); 
-        setCatalogError("Couldn't load the skill list. Try refreshing."); 
-      } 
-    }; 
-    
-    fetchSkillCatalog(); 
-  
+ useEffect(() => {
+    const fetchSkillCatalog = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/userApi/skills`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          router.push("/welcomePage");
+          return;
+        }
+
+        if (!res.ok) throw new Error(`Failed to load skills: ${res.status}`);
+
+        const data = await res.json();
+        setSkillCatalog(data.skills || []);
+      } catch (err) {
+        console.error("Error fetching skill catalog:", err);
+        setCatalogError("Couldn't load the skill list. Try refreshing.");
+      }
+    };
+
+    fetchSkillCatalog();
   }, [router]);
 
-  const availableSkills = useMemo(() => {
+  const categories = useMemo(
+    () => Array.from(new Set(skillCatalog.map((s) => s.category).filter(Boolean))),
+    [skillCatalog]
+  );
+
+   const availableSkills = useMemo(() => {
     if (!category) return [];
+    return skillCatalog.filter((s) => s.category === category);
+  }, [category, skillCatalog]);
 
-    return skillOptions[category];
-  }, [category]);
-
-  const handleCategoryChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const value = event.target.value as SkillCategory;
-
-    setCategory(value);
-    setSkill("");
+   const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setCategory(event.target.value);
+    setSkillId("");
   };
 
-  const isFormValid =
-    category !== "" &&
-    skill !== "" &&
-    months !== "";
+  const isFormValid = category !== "" && skillId !== "" && months !== "";
 
-  const handleGetRoadmap = async () => { 
-    if (!isFormValid) 
-      return; 
-    
-    const matchedSkill = skillCatalog.find((s) => s.name === skill); 
-    
-    if (!matchedSkill) { 
-      setCatalogError(`"${skill}" isn't in the skill catalog yet.`); 
-      return; 
-    } 
-    try { 
-      const res = await fetch(`${API_BASE_URL}/userApi/user/skills`, { 
-        method: "POST", 
-        credentials: "include", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ skillId: matchedSkill.id }), 
-      }); 
-      
-      if (res.status === 401) { 
-        router.push("/welcomePage"); 
-        return; 
-      } 
-      
-      if (!res.ok) 
-        throw new Error(`Failed to create skill: ${res.status}`); 
-      
-      router.push("/dashboard"); 
-    } catch (err) { 
-      console.error("Error creating skill:", err); 
-    } 
-  }; 
+  const handleGetRoadmap = async () => {
+    if (!isFormValid) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/userApi/user/skills`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skillId }), 
+      });
+
+      if (res.status === 401) {
+        router.push("/welcomePage");
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.message || `Failed to create skill: ${res.status}`);
+      }
+
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("Error creating skill:", err);
+      setCatalogError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+    }
+  };
+
 
   return (
     <main className="min-h-screen bg-[#B85F35] px-5 py-8 md:px-10">
@@ -235,27 +190,10 @@ export default function SkillSetup() {
                   onChange={handleCategoryChange}
                   className="w-full rounded-2xl border border-[#D8CEBB] bg-[#FBF7EF] px-4 py-4 text-sm text-[#45482F] outline-none transition focus:border-[#4B5130] focus:ring-2 focus:ring-[#4B5130]/10"
                 >
-                  <option value="">Choose a field</option>
-
-                  <option value="Frontend">
-                    Frontend Development
-                  </option>
-
-                  <option value="Backend">
-                    Backend Development
-                  </option>
-
-                  <option value="AI & Machine Learning">
-                    AI & Machine Learning
-                  </option>
-
-                  <option value="Cyber Security">
-                    Cyber Security
-                  </option>
-
-                  <option value="English">
-                    English
-                  </option>
+                <option value="">Choose a field</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
               </div>
 
@@ -270,96 +208,26 @@ export default function SkillSetup() {
 
                 <select
                   id="skill"
-                  value={skill}
-                  onChange={(event) => setSkill(event.target.value)}
+                  value={skillId}
+                  onChange={(e) => setSkillId(e.target.value)}
                   disabled={!category}
                   className="w-full rounded-2xl border border-[#D8CEBB] bg-[#FBF7EF] px-4 py-4 text-sm text-[#45482F] outline-none transition focus:border-[#4B5130] focus:ring-2 focus:ring-[#4B5130]/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="">
-                    {category
-                      ? "Choose a skill"
-                      : "Choose a field first"}
-                  </option>
-
+                  <option value="">{category ? "Choose a skill" : "Choose a field first"}</option>
                   {availableSkills.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
+                    <option key={item.id} value={item.id}>{item.name}</option>
                   ))}
                 </select>
+
+                {catalogError && (
+                  <p className="mt-3 text-sm text-red-600">{catalogError}</p>
+                )}
               </div>
 
             </div>
 
             {/* Divider */}
             <div className="my-9 h-px bg-[#D8CEBB]" />
-
-            {/* Duration */}
-            <div>
-
-              <div className="mb-5">
-
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#77745F]">
-                  Learning pace
-                </p>
-
-                <h2 className="mt-1 font-serif text-2xl text-[#353827]">
-                  How much time do you have?
-                </h2>
-
-                <p className="mt-2 text-sm text-[#77745F]">
-                  Set your timeline and we’ll structure your roadmap around it.
-                </p>
-
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-
-                {/* Months */}
-                <DurationSelect
-                  label="Months"
-                  value={months}
-                  onChange={setMonths}
-                  min={1}
-                  max={6}
-                />
-
-                {/* Weeks */}
-                <DurationSelect
-                  label="Weeks"
-                  value={weeks}
-                  onChange={setWeeks}
-                  min={0}
-                  max={4}
-                />
-
-              </div>
-
-            </div>
-
-            {/* Plan Preview */}
-            {months && (
-              <div className="mt-6 rounded-2xl bg-[#4B5130] p-5 text-[#F5EBDD]">
-
-                <p className="text-xs uppercase tracking-[0.2em] opacity-70">
-                  Your learning plan
-                </p>
-
-                <div className="mt-2 font-serif text-xl">
-                  {months}{" "}
-                  {Number(months) === 1 ? "month" : "months"}
-
-                  {Number(weeks) > 0 && (
-                    <>
-                      {" · "}
-                      {weeks}{" "}
-                      {Number(weeks) === 1 ? "week" : "weeks"}
-                    </>
-                  )}
-                </div>
-
-              </div>
-            )}
 
             {/* CTA */}
             <button
@@ -382,55 +250,5 @@ export default function SkillSetup() {
       </section>
 
     </main>
-  );
-}
-
-
-/* -------------------------------- */
-/* Duration Select Component        */
-/* -------------------------------- */
-
-type DurationSelectProps = {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  min: number;
-  max: number;
-};
-
-function DurationSelect({
-  label,
-  value,
-  onChange,
-  min,
-  max,
-}: DurationSelectProps) {
-  return (
-    <div>
-
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-[#77745F]">
-        {label}
-      </label>
-
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-2xl border border-[#D8CEBB] bg-[#FBF7EF] px-4 py-4 text-sm text-[#45482F] outline-none transition focus:border-[#4B5130] focus:ring-2 focus:ring-[#4B5130]/10"
-      >
-
-        {min === 0 && <option value="0">0</option>}
-
-        {Array.from(
-          { length: max - min + 1 },
-          (_, index) => index + min
-        ).map((number) => (
-          <option key={number} value={number}>
-            {number}
-          </option>
-        ))}
-
-      </select>
-
-    </div>
   );
 }
