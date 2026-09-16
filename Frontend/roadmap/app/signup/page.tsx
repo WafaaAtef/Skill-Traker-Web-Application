@@ -32,8 +32,7 @@ const COUNTRIES = [
 ];
 
 type FormState = {
-  firstName: string;
-  lastName: string;
+  userName: string;
   email: string;
   country: string;
   password: string;
@@ -43,8 +42,7 @@ type FormState = {
 export default function Home() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>({
-    firstName: '',
-    lastName: '',
+    userName: '',
     email: '',
     country: '',
     password: '',
@@ -68,8 +66,7 @@ export default function Home() {
 
     const nextErrors: Partial<Record<keyof FormState, string>> = {};
 
-    if (!form.firstName.trim()) nextErrors.firstName = 'First name is required';
-    if (!form.lastName.trim()) nextErrors.lastName = 'Last name is required';
+    if (!form.userName.trim()) nextErrors.userName = 'User name is required';
     if (!form.email.trim()) nextErrors.email = 'Email is required';
     if (!form.country) nextErrors.country = 'Country is required';
     if (!form.password) nextErrors.password = 'Password is required';
@@ -92,7 +89,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          userName: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+          userName: form.userName.trim(),
           email: form.email.trim(),
           password: form.password,
           country: form.country,
@@ -141,30 +138,18 @@ export default function Home() {
           <form className={styles.form} noValidate onSubmit={handleSubmit}>
             <div className={styles.row}>
               <div className={styles.field}>
-                <label className={styles.label} htmlFor="firstName">First name</label>
+                <label className={styles.label} htmlFor="userName">User name</label>
                 <input
-                  id="firstName"
-                  name="firstName"
+                  id="userName"
+                  name="userName"
                   className={styles.input}
-                  value={form.firstName}
+                  value={form.userName}
                   onChange={handleChange}
                   placeholder="Ahmed"
                 />
-                {errors.firstName && <span className={styles.error}>{errors.firstName}</span>}
+                {errors.userName && <span className={styles.error}>{errors.userName}</span>}
               </div>
 
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="lastName">Last name</label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  className={styles.input}
-                  value={form.lastName}
-                  onChange={handleChange}
-                  placeholder="Doe"
-                />
-                {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
-              </div>
             </div>
 
             <div className={styles.field}>
