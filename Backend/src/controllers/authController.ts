@@ -25,13 +25,6 @@ export const SignUp = async(req:Request ,res:Response) =>{
         password :hashedPass,
         country
     })
-    const token = createToken(newUser._id.toString(), newUser.role)
-    res.cookie("token", token, {
-        maxAge: maxAge * 1000,
-        httpOnly: true,
-        sameSite: "none",
-        secure: true
-    })
     res.status(200).json({
         msg:"user created"
     })
@@ -69,7 +62,8 @@ export const SignUp = async(req:Request ,res:Response) =>{
     }
   catch(error){
        return res.status(500)
-          .json({msg :"internal server error"})}}
+          .json({msg :"internal server error"})}
+}
 
 ///////////////////////////////
 
@@ -87,5 +81,6 @@ try{
   }
     catch(error){
        return res.status(500)
-          .json({msg :"internal server error"})}}
+          .json({msg :"internal server error"})}
+}
 

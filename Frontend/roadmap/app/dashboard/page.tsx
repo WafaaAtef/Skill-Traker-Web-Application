@@ -40,7 +40,7 @@ export default function SkillDashboard() {
         }
 
         const data = await res.json();
-        setSkills(data.skills);
+        setSkills(data.skills || []);
       } catch (err) {
         console.error("Error fetching skills:", err);
         setError("Couldn't load your skills. Try refreshing.");
@@ -116,22 +116,34 @@ export default function SkillDashboard() {
 
         {!loading && !error && (
           <div className={styles.skillGrid}>
-            {skills.map((skill) => (
-              <Link
-                key={skill.id}
-                href={`/skills/${skill.id}`}
-                className={styles.skillCard}
-              >
-                <span className={styles.skillName}>{skill.name}</span>
-              </Link>
-            ))}
+            {skills.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>No skills yet. Let's get started!</p>
+                <Link href="/roadmap" className={styles.addCard} aria-label="Add a skill">
+                  +
+                </Link>
+              </div>
+            ) : (
+              <>
+                {skills.map((skill) => (
+                  <Link
+                    key={skill.id}
+                    href={`/skills/${skill.id}`}
+                    className={styles.skillCard}
+                  >
+                    <span className={styles.skillName}>{skill.name}</span>
+                  </Link>
+                ))}
 
-            <Link href="/skills/new" className={styles.addCard} aria-label="Add a skill">
-              +
-            </Link>
+                <Link href="/roadmap" className={styles.addCard} aria-label="Add a skill">
+                  +
+                </Link>
+              </>
+            )}
           </div>
         )}
       </main>
     </div>
   );
 }
+

@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const TechSetupController_1 = require("../controllers/TechSetupController");
+const techSetupMiddleware_1 = require("../middleware/techSetupMiddleware");
+const authMiddleware_1 = require("../middleware/authMiddleware");
+const TechRouter = (0, express_1.Router)();
+TechRouter.post("/addTrack", authMiddleware_1.auth, techSetupMiddleware_1.AddTrackOrRoadmap, TechSetupController_1.addTrack);
+TechRouter.post("/addRoadmap", authMiddleware_1.auth, techSetupMiddleware_1.AddTrackOrRoadmap, TechSetupController_1.AddRoadMap);
+TechRouter.post("/addSkills", authMiddleware_1.auth, techSetupMiddleware_1.AddTrackOrRoadmap, TechSetupController_1.addSkills);
+exports.default = TechRouter;
