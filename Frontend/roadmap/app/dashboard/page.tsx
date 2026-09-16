@@ -131,7 +131,7 @@ export default function SkillDashboard() {
               </Link>
             ))}
 
-            <Link href="/skills/new" className={styles.addCard} aria-label="Add a skill">
+            <Link href="/skills" className={styles.addCard} aria-label="Add a skill">
               +
             </Link>
           </div>
