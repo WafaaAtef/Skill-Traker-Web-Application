@@ -49,7 +49,7 @@ export default function Home() {
         throw new Error(data?.msg || 'Login failed');
       }
 
-      router.push('/roadmap');
+      router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -140,3 +140,4 @@ function EyeIcon({ open }: { open: boolean }) {
     />
   );
 }
+

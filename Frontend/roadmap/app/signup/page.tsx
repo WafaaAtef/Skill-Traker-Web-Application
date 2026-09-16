@@ -155,7 +155,7 @@ export default function Home() {
         throw new Error(data?.msg || 'Signup failed');
       }
 
-      router.push('/dashboard');
+      router.push('/login');
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -444,3 +444,4 @@ function EyeIcon({ open }: { open: boolean }) {
     />
   );
 }
+
