@@ -18,6 +18,7 @@ export const auth=(req:Request ,res:Response,next:NextFunction) =>{
           next()
     }  
     catch(error){
- return res.status(500).json({msg:"server error"})
+      console.error("auth middleware error:", error);
+      return res.status(500).json({msg:"server error"});
     }
 }

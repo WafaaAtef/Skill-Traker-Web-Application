@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+
 
 const skillOptions = {
   Frontend: [
@@ -33,6 +34,11 @@ const skillOptions = {
   ]
 };
 
+type CatalogSkill = { 
+  id: string; 
+  name: string 
+}; 
+
 type SkillCategory = keyof typeof skillOptions;
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -47,6 +53,41 @@ export default function SkillSetup() {
 
   // Weeks are optional
   const [weeks, setWeeks] = useState("0");
+
+  const [skillCatalog, setSkillCatalog] = useState<CatalogSkill[]>([]);
+
+  const [catalogError, setCatalogError] = useState(""); 
+  
+  useEffect(() => { 
+    
+    const fetchSkillCatalog = async () => { 
+      try { 
+        const res = await fetch(`${API_BASE_URL}/userApi/skills`, { 
+          method: "GET", 
+          credentials: "include", 
+        }); 
+        
+        if (res.status === 401) { 
+          router.push("/welcomePage"); 
+          return; 
+        } 
+        
+        if (!res.ok) 
+          throw new Error(`Failed to load skills: ${res.status}`); 
+        
+        const data = await res.json(); 
+        
+        setSkillCatalog(data.skills || []); 
+      
+      } catch (err) { 
+        console.error("Error fetching skill catalog:", err); 
+        setCatalogError("Couldn't load the skill list. Try refreshing."); 
+      } 
+    }; 
+    
+    fetchSkillCatalog(); 
+  
+  }, [router]);
 
   const availableSkills = useMemo(() => {
     if (!category) return [];
@@ -68,40 +109,37 @@ export default function SkillSetup() {
     skill !== "" &&
     months !== "";
 
-  const handleGetRoadmap = async () => {
-  if (!isFormValid) return;
-
-  const learningPlan = {
-    category,
-    skill,
-    duration: {
-      months: Number(months),
-      weeks: Number(weeks),
-    },
-  };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/userApi/user/skills`, {
-      method: "POST",
-      credentials: "include", 
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(learningPlan),
-    });
-
-    if (res.status === 401) {
-      router.push("/welcomePage");
-      return;
-    }
-
-    if (!res.ok) {
-      throw new Error(`Failed to create skill: ${res.status}`);
-    }
-
-    router.push("/dashboard");
-    } catch (err) {
-      console.error("Error creating skill:", err);
-    }
-  };
+  const handleGetRoadmap = async () => { 
+    if (!isFormValid) 
+      return; 
+    
+    const matchedSkill = skillCatalog.find((s) => s.name === skill); 
+    
+    if (!matchedSkill) { 
+      setCatalogError(`"${skill}" isn't in the skill catalog yet.`); 
+      return; 
+    } 
+    try { 
+      const res = await fetch(`${API_BASE_URL}/userApi/user/skills`, { 
+        method: "POST", 
+        credentials: "include", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ skillId: matchedSkill.id }), 
+      }); 
+      
+      if (res.status === 401) { 
+        router.push("/welcomePage"); 
+        return; 
+      } 
+      
+      if (!res.ok) 
+        throw new Error(`Failed to create skill: ${res.status}`); 
+      
+      router.push("/dashboard"); 
+    } catch (err) { 
+      console.error("Error creating skill:", err); 
+    } 
+  }; 
 
   return (
     <main className="min-h-screen bg-[#B85F35] px-5 py-8 md:px-10">

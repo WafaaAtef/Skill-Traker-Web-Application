@@ -47,16 +47,16 @@ res.status(200).json({msg:"Roadmaps added successfully"})
 /////////////////////////
 
 export const addSkills = async (req:Request,res:Response) =>{
-try{
-const skills =req.body
-const newSkills = await Skill.insertMany(skills)
+    try{
+        const skills =req.body
+        const newSkills = await Skill.insertMany(skills)
 
-res.status(200).json({msg:"Skills added successfully"})
-}
-catch(error)
-{
+        res.status(200).json({msg:"Skills added successfully"})
+    } 
+    catch(error){
+        console.error("addSkills error:", error);
         return res.status(500).json({
-        msg:"server error"
-})
-}
+            msg:"server error!"
+        });
+    }
 }

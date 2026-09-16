@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken"
 import {User} from "../models/userModel"
 
 const maxAge = 60 *60 ;
-const JWT_SECRET = process.env.JWT_TOKEN || "skill-tracker-dev-secret-key-change-me";
+const JWT_SECRET = process.env.JWT_TOKEN || "secret123";
 const createToken =(id:string , role :string) :string =>{
     return jwt.sign({id , role} , JWT_SECRET, {expiresIn:maxAge})
 }
