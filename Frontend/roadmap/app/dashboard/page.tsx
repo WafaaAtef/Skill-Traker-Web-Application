@@ -12,6 +12,7 @@ type Skill = {
   name: string;
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const NAV_ITEMS = ["Skills"];
 
 export default function SkillDashboard() {
@@ -24,7 +25,7 @@ export default function SkillDashboard() {
   useEffect(() => {
     const fetchUserSkills = async () => {
       try {
-        const res = await fetch("http://localhost:3000/userApi/user/skills", {
+        const res = await fetch(`${API_BASE_URL}/userApi/user/skills`, {
           method: "GET",
           credentials: "include",
         });
@@ -53,8 +54,8 @@ export default function SkillDashboard() {
 
   const handleSignOut = async () => {
     try {
-      const res = await fetch("http://localhost:3000/authApi/signout", {
-        method: "POST",
+      const res = await fetch(`${API_BASE_URL}/authApi/SignOut`, {
+        method: "GET",
         credentials: "include",
       });
 

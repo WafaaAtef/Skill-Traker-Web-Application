@@ -6,7 +6,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const COUNTRIES = [
   'Egypt',
@@ -42,6 +43,7 @@ type FormState = {
 
 export default function Home() {
   const router = useRouter();
+
   const [form, setForm] = useState<FormState>({
     firstName: '',
     lastName: '',
@@ -50,16 +52,31 @@ export default function Home() {
     password: '',
     confirmPassword: '',
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+
+  const [errors, setErrors] =
+    useState<Partial<Record<keyof FormState, string>>>({});
+
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: '' }));
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: '',
+    }));
+
     setSubmitError('');
   }
 
@@ -68,46 +85,83 @@ export default function Home() {
 
     const nextErrors: Partial<Record<keyof FormState, string>> = {};
 
-    if (!form.firstName.trim()) nextErrors.firstName = 'First name is required';
-    if (!form.lastName.trim()) nextErrors.lastName = 'Last name is required';
-    if (!form.email.trim()) nextErrors.email = 'Email is required';
-    if (!form.country) nextErrors.country = 'Country is required';
-    if (!form.password) nextErrors.password = 'Password is required';
-    if (form.password.length < 8) nextErrors.password = 'Password must be at least 8 characters';
-    if (!form.confirmPassword) nextErrors.confirmPassword = 'Please confirm your password';
-    if (form.password !== form.confirmPassword) {
+    if (!form.firstName.trim()) {
+      nextErrors.firstName = 'First name is required';
+    }
+
+    if (!form.lastName.trim()) {
+      nextErrors.lastName = 'Last name is required';
+    }
+
+    if (!form.email.trim()) {
+      nextErrors.email = 'Email is required';
+    }
+
+    if (!form.country.trim()) {
+      nextErrors.country = 'Country is required';
+    }
+
+    if (!form.password) {
+      nextErrors.password = 'Password is required';
+    } else if (form.password.length < 8) {
+      nextErrors.password = 'Password must be at least 8 characters';
+    }
+
+    if (!form.confirmPassword) {
+      nextErrors.confirmPassword = 'Please confirm your password';
+    } else if (form.password !== form.confirmPassword) {
       nextErrors.confirmPassword = 'Passwords do not match';
     }
 
     setErrors(nextErrors);
 
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/authApi/SignUp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          userName: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
-          email: form.email.trim(),
-          password: form.password,
-          country: form.country,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/authApi/SignUp`,
+        {
+          method: 'POST',
 
-      const data = await response.json().catch(() => ({ msg: 'Signup failed' }));
+          headers: {
+            'Content-Type': 'application/json',
+          },
+
+          credentials: 'include',
+
+          body: JSON.stringify({
+            firstName: form.firstName.trim(),
+            lastName: form.lastName.trim(),
+            email: form.email.trim().toLowerCase(),
+            country: form.country.trim(),
+            password: form.password,
+            confirmPassword: form.confirmPassword,
+          }),
+        }
+      );
+
+      const data = await response
+        .json()
+        .catch(() => ({
+          msg: 'Signup failed',
+        }));
 
       if (!response.ok) {
         throw new Error(data?.msg || 'Signup failed');
       }
 
-      router.push('/login');
+      router.push('/dashboard');
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Signup failed');
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : 'Signup failed'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -128,20 +182,36 @@ export default function Home() {
       <div className={styles.rightPanel}>
         <div className={styles.formWrapper}>
           <div className={styles.header}>
-            <h1 className={styles.title}>Create your account</h1>
+            <h1 className={styles.title}>
+              Create your account
+            </h1>
 
             <p className={styles.loginPrompt}>
               Already have an account?
-              <Link href="/login" className={styles.login}>
+
+              <Link
+                href="/login"
+                className={styles.login}
+              >
                 Log in
               </Link>
             </p>
           </div>
 
-          <form className={styles.form} noValidate onSubmit={handleSubmit}>
+          <form
+            className={styles.form}
+            noValidate
+            onSubmit={handleSubmit}
+          >
             <div className={styles.row}>
               <div className={styles.field}>
-                <label className={styles.label} htmlFor="firstName">First name</label>
+                <label
+                  className={styles.label}
+                  htmlFor="firstName"
+                >
+                  First name
+                </label>
+
                 <input
                   id="firstName"
                   name="firstName"
@@ -150,11 +220,22 @@ export default function Home() {
                   onChange={handleChange}
                   placeholder="Ahmed"
                 />
-                {errors.firstName && <span className={styles.error}>{errors.firstName}</span>}
+
+                {errors.firstName && (
+                  <span className={styles.error}>
+                    {errors.firstName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label} htmlFor="lastName">Last name</label>
+                <label
+                  className={styles.label}
+                  htmlFor="lastName"
+                >
+                  Last name
+                </label>
+
                 <input
                   id="lastName"
                   name="lastName"
@@ -163,12 +244,23 @@ export default function Home() {
                   onChange={handleChange}
                   placeholder="Doe"
                 />
-                {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
+
+                {errors.lastName && (
+                  <span className={styles.error}>
+                    {errors.lastName}
+                  </span>
+                )}
               </div>
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label} htmlFor="email">Email address</label>
+              <label
+                className={styles.label}
+                htmlFor="email"
+              >
+                Email address
+              </label>
+
               <input
                 id="email"
                 name="email"
@@ -178,11 +270,22 @@ export default function Home() {
                 onChange={handleChange}
                 placeholder="example@gmail.com"
               />
-              {errors.email && <span className={styles.error}>{errors.email}</span>}
+
+              {errors.email && (
+                <span className={styles.error}>
+                  {errors.email}
+                </span>
+              )}
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label} htmlFor="country">Country</label>
+              <label
+                className={styles.label}
+                htmlFor="country"
+              >
+                Country
+              </label>
+
               <select
                 id="country"
                 name="country"
@@ -190,70 +293,135 @@ export default function Home() {
                 value={form.country}
                 onChange={handleChange}
               >
-                <option value="" disabled>Select your country</option>
+                <option value="" disabled>
+                  Select your country
+                </option>
+
                 {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
+                  <option
+                    key={country}
+                    value={country}
+                  >
                     {country}
                   </option>
                 ))}
               </select>
-              {errors.country && <span className={styles.error}>{errors.country}</span>}
+
+              {errors.country && (
+                <span className={styles.error}>
+                  {errors.country}
+                </span>
+              )}
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label} htmlFor="password">Password</label>
+              <label
+                className={styles.label}
+                htmlFor="password"
+              >
+                Password
+              </label>
+
               <div className={styles.passwordWrapper}>
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={
+                    showPassword
+                      ? 'text'
+                      : 'password'
+                  }
                   className={styles.input}
                   value={form.password}
                   onChange={handleChange}
                   placeholder="At least 8 characters"
                 />
+
                 <button
                   type="button"
                   className={styles.eyeButton}
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() =>
+                    setShowPassword((v) => !v)
+                  }
+                  aria-label={
+                    showPassword
+                      ? 'Hide password'
+                      : 'Show password'
+                  }
                 >
                   <EyeIcon open={showPassword} />
                 </button>
               </div>
-              {errors.password && <span className={styles.error}>{errors.password}</span>}
+
+              {errors.password && (
+                <span className={styles.error}>
+                  {errors.password}
+                </span>
+              )}
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label} htmlFor="confirmPassword">Confirm password</label>
+              <label
+                className={styles.label}
+                htmlFor="confirmPassword"
+              >
+                Confirm password
+              </label>
+
               <div className={styles.passwordWrapper}>
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={
+                    showConfirmPassword
+                      ? 'text'
+                      : 'password'
+                  }
                   className={styles.input}
                   value={form.confirmPassword}
                   onChange={handleChange}
                   placeholder="Re-enter your password"
                 />
+
                 <button
                   type="button"
                   className={styles.eyeButton}
-                  onClick={() => setShowConfirmPassword((v) => !v)}
-                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  onClick={() =>
+                    setShowConfirmPassword((v) => !v)
+                  }
+                  aria-label={
+                    showConfirmPassword
+                      ? 'Hide password'
+                      : 'Show password'
+                  }
                 >
-                  <EyeIcon open={showConfirmPassword} />
+                  <EyeIcon
+                    open={showConfirmPassword}
+                  />
                 </button>
               </div>
+
               {errors.confirmPassword && (
-                <span className={styles.error}>{errors.confirmPassword}</span>
+                <span className={styles.error}>
+                  {errors.confirmPassword}
+                </span>
               )}
             </div>
 
-            {submitError && <span className={styles.error}>{submitError}</span>}
+            {submitError && (
+              <span className={styles.error}>
+                {submitError}
+              </span>
+            )}
 
-            <button type="submit" className={styles.signupButton} disabled={isSubmitting}>
-              {isSubmitting ? 'Creating account...' : 'Sign up'}
+            <button
+              type="submit"
+              className={styles.signupButton}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? 'Creating account...'
+                : 'Sign up'}
             </button>
           </form>
         </div>
@@ -265,7 +433,11 @@ export default function Home() {
 function EyeIcon({ open }: { open: boolean }) {
   return (
     <Image
-      src={open ? '/icons/hidden.png' : '/icons/show.png'}
+      src={
+        open
+          ? '/icons/hidden.png'
+          : '/icons/show.png'
+      }
       alt={open ? 'Hide password' : 'Show password'}
       width={20}
       height={20}

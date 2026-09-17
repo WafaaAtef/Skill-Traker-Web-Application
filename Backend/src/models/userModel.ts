@@ -66,7 +66,11 @@ const SkillSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-  }
+  },
+  category: {
+    type: String,
+    trim: true,
+  },
 });
 
 export const Skill = mongoose.model("Skill", SkillSchema);
