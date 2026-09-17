@@ -1,5 +1,5 @@
-import SkillSetup from "@/components/skills/SkillSetup";
+import Roadmap from "@/components/roadmap/Roadmap";
 
 export default function RoadmapPage() {
-  return <SkillSetup />;
+  return <Roadmap />;
 }

@@ -1,97 +1,70 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const skillOptions = {
-  Frontend: [
-    "HTML & CSS",
-    "JavaScript",
-    "React",
-    "Next.js",
-  ],
-
-  Backend: [
-    "Node.js",
-    "Express.js",
-    "Databases",
-    "APIs",
-  ],
-
-  "AI & Machine Learning": [
-    "Python for AI",
-    "Machine Learning",
-    "Deep Learning",
-    "Computer Vision",
-  ],
-
-  "Cyber Security": [
-    "Networking",
-    "Web Security",
-    "Cryptography",
-    "Ethical Hacking",
-  ],
-
-  English: [
-    "Reading",
-    "Writing",
-    "Listening",
-    "Speaking",
-  ],
+type Track = {
+  _id: string;
+  skill: string;
+  name: string;
+  description: string;
 };
-
-type SkillCategory = keyof typeof skillOptions;
 
 export default function SkillSetup() {
   const router = useRouter();
 
-  const [category, setCategory] = useState<SkillCategory | "">("");
-  const [skill, setSkill] = useState("");
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [selectedTrackId, setSelectedTrackId] = useState("");
 
-  // Months are required
   const [months, setMonths] = useState("");
-
-  // Weeks are optional
   const [weeks, setWeeks] = useState("0");
 
-  const availableSkills = useMemo(() => {
-    if (!category) return [];
+  const [loadingTracks, setLoadingTracks] = useState(true);
+  const [error, setError] = useState("");
 
-    return skillOptions[category];
-  }, [category]);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const handleCategoryChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const value = event.target.value as SkillCategory;
+  useEffect(() => {
+    const fetchTracks = async () => {
+      try {
+        setLoadingTracks(true);
+        setError("");
 
-    setCategory(value);
-    setSkill("");
-  };
+        const response = await fetch(
+          `${API_URL}/userApi/GetTracks`,
+          {
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch tracks");
+        }
+
+        const data = await response.json();
+
+        setTracks(data.tracks);
+      } catch (error) {
+        console.error(error);
+        setError("Unable to load tracks.");
+      } finally {
+        setLoadingTracks(false);
+      }
+    };
+
+    fetchTracks();
+  }, [API_URL]);
 
   const isFormValid =
-    category !== "" &&
-    skill !== "" &&
+    selectedTrackId !== "" &&
     months !== "";
 
   const handleGetRoadmap = () => {
     if (!isFormValid) return;
 
-    const learningPlan = {
-      category,
-      skill,
-      duration: {
-        months: Number(months),
-        weeks: Number(weeks),
-      },
-    };
-
-    console.log("Learning Plan:", learningPlan);
-
-    // Temporary navigation.
-    // Later the backend API will be called here.
-    router.push("/roadmap");
-  };
+router.push(
+  `/roadmap?trackId=${selectedTrackId}&months=${months}&weeks=${weeks}`
+);  };
 
   return (
     <main className="min-h-screen bg-[#B85F35] px-5 py-8 md:px-10">
@@ -169,77 +142,55 @@ export default function SkillSetup() {
 
             </div>
 
-            {/* Fields */}
-            <div className="grid gap-6 md:grid-cols-2">
+            {/* Track */}
+            <div>
 
-              {/* Category */}
-              <div>
-                <label
-                  htmlFor="category"
-                  className="mb-2 block text-sm font-semibold text-[#45482F]"
-                >
-                  What do you want to learn?
-                </label>
+              <label
+                htmlFor="track"
+                className="mb-2 block text-sm font-semibold text-[#45482F]"
+              >
+                What do you want to learn?
+              </label>
 
-                <select
-                  id="category"
-                  value={category}
-                  onChange={handleCategoryChange}
-                  className="w-full rounded-2xl border border-[#D8CEBB] bg-[#FBF7EF] px-4 py-4 text-sm text-[#45482F] outline-none transition focus:border-[#4B5130] focus:ring-2 focus:ring-[#4B5130]/10"
-                >
-                  <option value="">Choose a field</option>
+              <select
+                id="track"
+                value={selectedTrackId}
+                onChange={(event) =>
+                  setSelectedTrackId(event.target.value)
+                }
+                disabled={loadingTracks}
+                className="w-full rounded-2xl border border-[#D8CEBB] bg-[#FBF7EF] px-4 py-4 text-sm text-[#45482F] outline-none transition focus:border-[#4B5130] focus:ring-2 focus:ring-[#4B5130]/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
 
-                  <option value="Frontend">
-                    Frontend Development
+                <option value="">
+                  {loadingTracks
+                    ? "Loading tracks..."
+                    : "Choose a track"}
+                </option>
+
+                {tracks.map((track) => (
+                  <option key={track._id} value={track._id}>
+                    {track.name}
                   </option>
+                ))}
 
-                  <option value="Backend">
-                    Backend Development
-                  </option>
+              </select>
 
-                  <option value="AI & Machine Learning">
-                    AI & Machine Learning
-                  </option>
+              {error && (
+                <p className="mt-2 text-sm text-red-700">
+                  {error}
+                </p>
+              )}
 
-                  <option value="Cyber Security">
-                    Cyber Security
-                  </option>
-
-                  <option value="English">
-                    English
-                  </option>
-                </select>
-              </div>
-
-              {/* Skill */}
-              <div>
-                <label
-                  htmlFor="skill"
-                  className="mb-2 block text-sm font-semibold text-[#45482F]"
-                >
-                  Choose your focus
-                </label>
-
-                <select
-                  id="skill"
-                  value={skill}
-                  onChange={(event) => setSkill(event.target.value)}
-                  disabled={!category}
-                  className="w-full rounded-2xl border border-[#D8CEBB] bg-[#FBF7EF] px-4 py-4 text-sm text-[#45482F] outline-none transition focus:border-[#4B5130] focus:ring-2 focus:ring-[#4B5130]/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">
-                    {category
-                      ? "Choose a skill"
-                      : "Choose a field first"}
-                  </option>
-
-                  {availableSkills.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {selectedTrackId && (
+                <p className="mt-3 text-sm leading-6 text-[#77745F]">
+                  {
+                    tracks.find(
+                      (track) => track._id === selectedTrackId
+                    )?.description
+                  }
+                </p>
+              )}
 
             </div>
 
@@ -267,7 +218,6 @@ export default function SkillSetup() {
 
               <div className="grid gap-4 sm:grid-cols-2">
 
-                {/* Months */}
                 <DurationSelect
                   label="Months"
                   value={months}
@@ -276,7 +226,6 @@ export default function SkillSetup() {
                   max={6}
                 />
 
-                {/* Weeks */}
                 <DurationSelect
                   label="Weeks"
                   value={weeks}
@@ -298,6 +247,7 @@ export default function SkillSetup() {
                 </p>
 
                 <div className="mt-2 font-serif text-xl">
+
                   {months}{" "}
                   {Number(months) === 1 ? "month" : "months"}
 
@@ -308,6 +258,7 @@ export default function SkillSetup() {
                       {Number(weeks) === 1 ? "week" : "weeks"}
                     </>
                   )}
+
                 </div>
 
               </div>

@@ -1,310 +1,363 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type Resource = {
-  id: number;
+  _id: string;
   title: string;
-  type: "Video" | "Article" | "Course";
-  duration: string;
+  type: string;
+  url: string;
+  duration?: number;
 };
 
 type Topic = {
-  id: number;
+  _id: string;
   title: string;
   description: string;
-  estimatedTime: string;
+  estimatedTime: number;
+  order: number;
   resources: Resource[];
 };
 
 type Level = {
-  id: number;
+  _id: string;
   title: string;
   description: string;
+  order: number;
   topics: Topic[];
 };
 
-const roadmapData: Level[] = [
-  {
-    id: 1,
-    title: "Foundations",
-    description: "Build the fundamentals before moving forward.",
-    topics: [
-      {
-        id: 1,
-        title: "How the Web Works",
-        description:
-          "Understand the internet, browsers, servers and how websites communicate.",
-        estimatedTime: "3 days",
-        resources: [
-          {
-            id: 1,
-            title: "How the Internet Works",
-            type: "Video",
-            duration: "18 min",
-          },
-          {
-            id: 2,
-            title: "HTTP Fundamentals",
-            type: "Article",
-            duration: "15 min",
-          },
-        ],
-      },
+type Roadmap = {
+  _id: string;
+  title: string;
+  description: string;
+  track: string;
+  level: {
+    _id: string;
+    title: string;
+    order: number;
+  };
+  levels: Level[];
+};
 
-      {
-        id: 2,
-        title: "HTML Fundamentals",
-        description:
-          "Learn how web pages are structured and how semantic HTML works.",
-        estimatedTime: "5 days",
-        resources: [
-          {
-            id: 3,
-            title: "HTML Crash Course",
-            type: "Video",
-            duration: "32 min",
-          },
-          {
-            id: 4,
-            title: "Semantic HTML",
-            type: "Article",
-            duration: "12 min",
-          },
-        ],
-      },
-    ],
-  },
+type Timeline = {
+  months: number;
+  weeks: number;
+  totalWeeks: number;
+};
 
-  {
-    id: 2,
-    title: "Building Interfaces",
-    description: "Start turning concepts into real interfaces.",
-    topics: [
-      {
-        id: 3,
-        title: "CSS Fundamentals",
-        description:
-          "Learn styling, layouts, responsive design and modern CSS.",
-        estimatedTime: "7 days",
-        resources: [
+type RoadmapResponse = {
+  roadmap: Roadmap;
+  timeline: Timeline;
+};
+
+export default function RoadmapPage() {
+  const searchParams = useSearchParams();
+
+  const trackId = searchParams.get("trackId");
+
+  const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
+  const [timeline, setTimeline] = useState<Timeline | null>(null);
+
+  const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
+  const [completedTopics, setCompletedTopics] = useState<string[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    if (!trackId) {
+      setError("Track not found.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchRoadmap = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(
+          `${API_URL}/userApi/GetRoadmaps/${trackId}`,
           {
-            id: 5,
-            title: "CSS Fundamentals",
-            type: "Course",
-            duration: "1h 20m",
-          },
-        ],
-      },
+            credentials: "include",
+          }
+        );
 
-      {
-        id: 4,
-        title: "Responsive Design",
-        description:
-          "Build interfaces that work beautifully across different screens.",
-        estimatedTime: "4 days",
-        resources: [
-          {
-            id: 6,
-            title: "Responsive Web Design",
-            type: "Video",
-            duration: "40 min",
-          },
-        ],
-      },
-    ],
-  },
+        if (!response.ok) {
+          throw new Error("Failed to fetch roadmap");
+        }
 
-  {
-    id: 3,
-    title: "JavaScript",
-    description: "Add logic and interaction to your websites.",
-    topics: [
-      {
-        id: 5,
-        title: "JavaScript Fundamentals",
-        description:
-          "Variables, functions, arrays, objects and core programming concepts.",
-        estimatedTime: "10 days",
-        resources: [
-          {
-            id: 7,
-            title: "JavaScript Fundamentals",
-            type: "Course",
-            duration: "2h",
-          },
-        ],
-      },
-    ],
-  },
-];
+        const data: RoadmapResponse = await response.json();
 
-export default function Roadmap() {
-  const [completedTopics, setCompletedTopics] = useState<number[]>([]);
+        setRoadmap(data.roadmap);
+        setTimeline(data.timeline);
+      } catch (error) {
+        console.error(error);
+        setError("Unable to load roadmap.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const toggleTopic = (topicId: number) => {
-    setCompletedTopics((current) =>
-      current.includes(topicId)
-        ? current.filter((id) => id !== topicId)
-        : [...current, topicId]
-    );
+    fetchRoadmap();
+  }, [API_URL, trackId]);
+
+  const handleCompleteTopic = async (topicId: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/userApi/completeTopic/${topicId}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to complete topic");
+      }
+
+      setCompletedTopics((previous) => [
+        ...previous,
+        topicId,
+      ]);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const totalTopics = roadmapData.reduce(
-    (total, level) => total + level.topics.length,
-    0
-  );
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#B85F35] px-5 py-10 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-[#F5EBDD]/80">
+            Loading your roadmap...
+          </p>
+        </div>
+      </main>
+    );
+  }
 
-  const progress = Math.round(
-    (completedTopics.length / totalTopics) * 100
-  );
+  if (error || !roadmap) {
+    return (
+      <main className="min-h-screen bg-[#B85F35] px-5 py-10 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-[#F5EBDD]">
+            {error || "Roadmap not found."}
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#B85F35] px-5 py-10 md:px-10">
 
-      {/* Header */}
+      <div className="mx-auto max-w-6xl">
 
-      <section className="mx-auto max-w-6xl">
+        {/* Header */}
+        <header className="mb-12">
 
-        <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="flex items-center gap-3 text-[#F5EBDD]">
 
-          <div>
-
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#F5EBDD]/70">
-              Your learning journey
-            </p>
-
-            <h1 className="font-serif text-5xl text-[#F5EBDD] md:text-6xl">
-              Frontend
-            </h1>
-
-            <p className="mt-3 max-w-xl text-sm leading-6 text-[#F5EBDD]/75">
-              Follow your path step by step. Learn, practice and prove
-              what you know before moving forward.
-            </p>
-
-          </div>
-
-          {/* Progress */}
-
-          <div className="rounded-3xl bg-[#F5EBDD] px-6 py-5 text-[#353827]">
-
-            <p className="text-xs uppercase tracking-[0.2em] text-[#77745F]">
-              Progress
-            </p>
-
-            <div className="mt-2 flex items-end gap-2">
-
-              <span className="font-serif text-3xl">
-                {progress}%
-              </span>
-
-              <span className="mb-1 text-xs text-[#77745F]">
-                completed
-              </span>
-
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#F5EBDD]/50 text-lg">
+              ✦
             </div>
 
-            <div className="mt-3 h-2 w-40 overflow-hidden rounded-full bg-[#D8CEBB]">
+            <div>
+              <h2 className="font-serif text-xl leading-none md:text-2xl">
+                SkillRoadmap
+              </h2>
 
-              <div
-                className="h-full rounded-full bg-[#4B5130] transition-all"
-                style={{ width: `${progress}%` }}
-              />
-
+              <p className="mt-1 text-[9px] uppercase tracking-[0.3em] opacity-80">
+                Learn · Practice · Grow
+              </p>
             </div>
 
           </div>
 
-        </div>
+        </header>
 
+        {/* Intro */}
+        <section className="mb-12">
 
-        {/* Roadmap */}
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#F5EBDD]/70">
+            Your learning journey
+          </p>
 
-        <div className="relative">
+          <h1 className="mt-3 font-serif text-5xl leading-tight text-[#F5EBDD] md:text-6xl">
+            {roadmap.title}
+          </h1>
 
-          {/* Vertical path */}
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-[#F5EBDD]/75 md:text-base">
+            {roadmap.description}
+          </p>
 
-          <div className="absolute left-[22px] top-0 hidden h-full w-px bg-[#F5EBDD]/30 md:block" />
+          {/* Timeline */}
+          {timeline && (
+            <div className="mt-6 inline-flex items-center gap-4 rounded-full bg-[#4B5130] px-5 py-3 text-sm text-[#F5EBDD]">
 
-          <div className="space-y-14">
+              <span>
+                {timeline.months}{" "}
+                {timeline.months === 1 ? "month" : "months"}
+              </span>
 
-            {roadmapData.map((level, levelIndex) => (
+              {timeline.weeks > 0 && (
+                <>
+                  <span className="opacity-40">·</span>
 
-              <section
-                key={level.id}
-                className="relative"
-              >
+                  <span>
+                    {timeline.weeks}{" "}
+                    {timeline.weeks === 1 ? "week" : "weeks"}
+                  </span>
+                </>
+              )}
 
-                {/* Level marker */}
+              <span className="opacity-40">·</span>
 
-                <div className="relative z-10 mb-7 flex items-center gap-5">
+              <span>
+                {timeline.totalWeeks} total weeks
+              </span>
 
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4B5130] text-sm font-bold text-[#F5EBDD] shadow-lg">
-                    {String(levelIndex + 1).padStart(2, "0")}
-                  </div>
+            </div>
+          )}
 
-                  <div>
+        </section>
 
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#F5EBDD]/60">
-                      Level {levelIndex + 1}
-                    </p>
+        {/* LEVELS */}
+        {!selectedLevel ? (
 
-                    <h2 className="font-serif text-3xl text-[#F5EBDD]">
+          <section>
+
+            <div className="mb-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#F5EBDD]/70">
+                Choose your focus
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+
+              {roadmap.levels
+                .sort((a, b) => a.order - b.order)
+                .map((level, index) => (
+
+                  <button
+                    key={level._id}
+                    onClick={() => setSelectedLevel(level)}
+                    className="group rounded-[28px] bg-[#F5EBDD] p-7 text-left transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                  >
+
+                    <div className="flex items-start justify-between">
+
+                      <span className="font-serif text-4xl text-[#B85F35]/50">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      <span className="text-xl text-[#4B5130] transition group-hover:translate-x-1">
+                        ↗
+                      </span>
+
+                    </div>
+
+                    <h2 className="mt-8 font-serif text-2xl text-[#353827]">
                       {level.title}
                     </h2>
 
-                    <p className="mt-1 text-sm text-[#F5EBDD]/65">
+                    <p className="mt-3 min-h-[48px] text-sm leading-6 text-[#77745F]">
                       {level.description}
                     </p>
 
-                  </div>
+                    <p className="mt-5 text-sm text-[#77745F]">
+                      {level.topics.length}{" "}
+                      {level.topics.length === 1
+                        ? "topic"
+                        : "topics"}
+                    </p>
 
-                </div>
+                    <div className="mt-7 text-sm font-semibold text-[#4B5130]">
+                      Open Focus →
+                    </div>
 
+                  </button>
 
-                {/* Topics */}
+                ))}
 
-                <div className="ml-0 space-y-4 md:ml-16">
+            </div>
 
-                  {level.topics.map((topic) => {
+          </section>
 
-                    const completed =
-                      completedTopics.includes(topic.id);
+        ) : (
+
+          /* SELECTED LEVEL */
+          <section>
+
+            <button
+              onClick={() => setSelectedLevel(null)}
+              className="mb-8 text-sm font-semibold text-[#F5EBDD]/80 transition hover:text-[#F5EBDD]"
+            >
+              ← Back to focuses
+            </button>
+
+            <div className="mb-8">
+
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#F5EBDD]/70">
+                Focus {String(selectedLevel.order).padStart(2, "0")}
+              </p>
+
+              <h2 className="mt-2 font-serif text-4xl text-[#F5EBDD] md:text-5xl">
+                {selectedLevel.title}
+              </h2>
+
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#F5EBDD]/75">
+                {selectedLevel.description}
+              </p>
+
+            </div>
+
+            <div className="rounded-[32px] bg-[#F5EBDD] p-6 md:p-10">
+
+              <div className="space-y-4">
+
+                {selectedLevel.topics
+                  .sort((a, b) => a.order - b.order)
+                  .map((topic) => {
+
+                    const isCompleted =
+                      completedTopics.includes(topic._id);
 
                     return (
-
-                      <article
-                        key={topic.id}
-                        className={`rounded-[28px] border p-6 transition ${
-                          completed
-                            ? "border-[#4B5130] bg-[#E8E2D3]"
-                            : "border-[#D8CEBB] bg-[#F5EBDD]"
-                        }`}
+                      <div
+                        key={topic._id}
+                        className="rounded-2xl border border-[#D8CEBB] bg-[#FBF7EF] p-5"
                       >
 
-                        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                        <div className="flex items-start gap-4">
 
-                          <div className="flex gap-4">
+                          {/* Complete */}
+                          <button
+                            onClick={() =>
+                              handleCompleteTopic(topic._id)
+                            }
+                            className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${
+                              isCompleted
+                                ? "bg-[#4B5130] text-[#F5EBDD]"
+                                : "border border-[#B8AF9E] text-[#77745F] hover:border-[#4B5130] hover:text-[#4B5130]"
+                            }`}
+                          >
+                            {isCompleted ? "✓" : "○"}
+                          </button>
 
-                            <button
-                              onClick={() =>
-                                toggleTopic(topic.id)
-                              }
-                              className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${
-                                completed
-                                  ? "border-[#4B5130] bg-[#4B5130] text-[#F5EBDD]"
-                                  : "border-[#A6A18D] text-transparent hover:border-[#4B5130]"
-                              }`}
-                            >
-                              ✓
-                            </button>
+                          {/* Topic */}
+                          <div className="flex-1">
 
-                            <div>
+                            <div className="flex flex-col justify-between gap-2 sm:flex-row">
 
                               <h3
-                                className={`font-serif text-2xl ${
-                                  completed
+                                className={`font-semibold ${
+                                  isCompleted
                                     ? "text-[#77745F] line-through"
                                     : "text-[#353827]"
                                 }`}
@@ -312,82 +365,88 @@ export default function Roadmap() {
                                 {topic.title}
                               </h3>
 
-                              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#77745F]">
-                                {topic.description}
-                              </p>
-
-                              <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-[#77745F]">
-                                ⏱ {topic.estimatedTime}
-                              </div>
+                              <span className="text-xs text-[#77745F]">
+                                {topic.estimatedTime} min
+                              </span>
 
                             </div>
 
-                          </div>
+                            <p className="mt-2 text-sm leading-6 text-[#77745F]">
+                              {topic.description}
+                            </p>
 
-                          <button className="rounded-full bg-[#4B5130] px-5 py-3 text-xs font-semibold text-[#F5EBDD] transition hover:bg-[#353827]">
-                            Explore →
-                          </button>
+                            {/* Resources */}
+                            {topic.resources.length > 0 && (
+                              <div className="mt-4">
 
-                        </div>
+                                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-[#77745F]">
+                                  Resources
+                                </p>
 
+                                <div className="space-y-2">
 
-                        {/* Resources */}
+                                  {topic.resources.map(
+                                    (resource) => (
 
-                        <div className="mt-6 border-t border-[#D8CEBB] pt-5">
+                                      <a
+                                        key={resource._id}
+                                        href={resource.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-between rounded-xl border border-[#D8CEBB] bg-white/40 px-4 py-3 text-sm transition hover:border-[#4B5130]"
+                                      >
 
-                          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#77745F]">
-                            Learning resources
-                          </p>
+                                        <div>
+                                          <p className="font-medium text-[#45482F]">
+                                            {resource.title}
+                                          </p>
 
-                          <div className="grid gap-3 md:grid-cols-2">
+                                          <p className="mt-1 text-xs uppercase tracking-wide text-[#77745F]">
+                                            {resource.type}
+                                          </p>
+                                        </div>
 
-                            {topic.resources.map((resource) => (
+                                        <span className="text-[#4B5130]">
+                                          ↗
+                                        </span>
 
-                              <button
-                                key={resource.id}
-                                className="flex items-center justify-between rounded-2xl bg-[#FBF7EF] px-4 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-md"
-                              >
+                                      </a>
 
-                                <div>
-
-                                  <p className="text-sm font-semibold text-[#45482F]">
-                                    {resource.title}
-                                  </p>
-
-                                  <p className="mt-1 text-xs text-[#77745F]">
-                                    {resource.type} · {resource.duration}
-                                  </p>
+                                    )
+                                  )}
 
                                 </div>
 
-                                <span className="text-[#4B5130]">
-                                  →
-                                </span>
-
-                              </button>
-
-                            ))}
+                              </div>
+                            )}
 
                           </div>
 
                         </div>
 
-                      </article>
-
+                      </div>
                     );
                   })}
 
-                </div>
+              </div>
 
-              </section>
+              {/* Continue */}
+              <button
+                className="mt-8 flex w-full items-center justify-center gap-3 rounded-full bg-[#4B5130] px-6 py-4 text-sm font-semibold text-[#F5EBDD] transition hover:bg-[#3D4227]"
+              >
+                Continue
+                <span className="text-lg">
+                  →
+                </span>
+              </button>
 
-            ))}
+            </div>
 
-          </div>
+          </section>
 
-        </div>
+        )}
 
-      </section>
+      </div>
 
     </main>
   );
